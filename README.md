@@ -1,20 +1,28 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# StudentOS AI
 
-# Run and deploy your AI Studio app
+StudentOS AI is an elite academic advisor, coding mentor, and career guide for university students. It provides intelligent, structured, and action-oriented tools to help students optimize their schedules, prepare for exams, practice coding algorithms, and build their professional profile.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/4c97be87-6b22-4e07-8228-589ad078da2e
+## Features
+- **Smart Study Planner:** Generate custom preparation sprint plans based on your current courses and upcoming exams.
+- **Elite Coding Coach:** Practice Data Structures and Algorithms with optimal complexity breakdowns and hints.
+- **Resume Impact Analyzer:** Critique resume bullets based on industry standards, ATS keyword optimization, and quantifiable impact.
+- **Placement Prep Roadmap:** Custom-tailored preparation strategies based on your targeted tech roles.
+- **Hackathon AI Assistant:** Generate hackathon project architectures and blueprints tailored for winning pitches.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:**  Node.js v20+
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Configure environment variables. Add your `.env` file with the required Firebase and Gemini keys.
+
+3. Start the application:
+   ```bash
+   npm run dev
+   ```
+
+4. The application will start and be available at `http://localhost:3000`.
