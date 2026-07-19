@@ -1,0 +1,293 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------- HELPER FUNCTIONS ----------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ---------------- VALIDATION BLUEPRINTS ----------------
+
+    function isValidStudentProfile(data) {
+      return data.keys().hasAll(['uid', 'fullName', 'email', 'university', 'major', 'graduationYear', 'streakCount', 'lastActive'])
+        && data.keys().size() == 8
+        && data.uid == request.auth.uid
+        && data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && data.university is string && data.university.size() <= 150
+        && data.major is string && data.major.size() <= 100
+        && data.graduationYear is int
+        && data.streakCount is int
+        && data.lastActive is string;
+    }
+
+    function isValidCourse(data) {
+      return data.keys().hasAll(['id', 'code', 'name', 'credits', 'semesterId', 'attendancePresent', 'attendanceAbsent'])
+        && (data.keys().size() == 7 || (data.keys().size() == 8 && data.keys().hasAny(['instructor'])))
+        && data.id is string
+        && data.code is string && data.code.size() <= 15
+        && data.name is string && data.name.size() <= 100
+        && data.credits is int
+        && data.semesterId is string
+        && data.attendancePresent is int
+        && data.attendanceAbsent is int;
+    }
+
+    function isValidAssignment(data) {
+      return data.keys().hasAll(['id', 'title', 'courseId', 'dueDate', 'priority', 'status'])
+        && (data.keys().size() == 6 || (data.keys().size() == 7 && data.keys().hasAny(['notes'])))
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.courseId is string
+        && data.dueDate is string
+        && data.priority in ['low', 'medium', 'high']
+        && data.status in ['pending', 'completed'];
+    }
+
+    function isValidSemester(data) {
+      return data.keys().hasAll(['id', 'title', 'targetGPA'])
+        && (data.keys().size() == 3 || (data.keys().size() == 4 && data.keys().hasAny(['currentGPA'])))
+        && data.id is string
+        && data.title is string && data.title.size() <= 100
+        && (data.targetGPA is number || data.targetGPA is float || data.targetGPA is int);
+    }
+
+    function isValidHackathon(data) {
+      return data.keys().hasAll(['id', 'name', 'date', 'status'])
+        && data.id is string
+        && data.name is string && data.name.size() <= 100
+        && data.date is string
+        && data.status in ['planning', 'registered', 'submitted', 'won', 'ended'];
+    }
+
+    function isValidCodingProfile(data) {
+      return data.keys().hasAll(['id', 'platform', 'username', 'solvedCount', 'lastUpdated'])
+        && data.id is string
+        && data.platform in ['LeetCode', 'Codeforces', 'GitHub', 'HackerRank']
+        && data.username is string && data.username.size() <= 100
+        && data.solvedCount is int;
+    }
+
+    function isValidInternshipApplication(data) {
+      return data.keys().hasAll(['id', 'company', 'role', 'status', 'appliedDate'])
+        && data.id is string
+        && data.company is string && data.company.size() <= 100
+        && data.role is string && data.role.size() <= 100
+        && data.status in ['wishlist', 'applied', 'online_test', 'interview', 'offer', 'rejected'];
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['id', 'title', 'description', 'status'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 100
+        && data.description is string && data.description.size() <= 1000
+        && data.status in ['idea', 'in_progress', 'completed'];
+    }
+
+    function isValidResearchPaper(data) {
+      return data.keys().hasAll(['id', 'title', 'authors', 'status'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 200
+        && data.authors is string && data.authors.size() <= 300
+        && data.status in ['writing', 'reviewing', 'accepted', 'published'];
+    }
+
+    function isValidCertificate(data) {
+      return data.keys().hasAll(['id', 'title', 'issuer', 'issueDate', 'category'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.issuer is string && data.issuer.size() <= 100
+        && data.issueDate is string
+        && data.category in ['academic', 'technical', 'soft_skills', 'extracurricular'];
+    }
+
+    function isValidFinanceTransaction(data) {
+      return data.keys().hasAll(['id', 'type', 'category', 'amount', 'date', 'description'])
+        && data.id is string
+        && data.type in ['income', 'expense']
+        && data.category is string && data.category.size() <= 50
+        && (data.amount is number || data.amount is float || data.amount is int)
+        && data.date is string
+        && data.description is string && data.description.size() <= 200;
+    }
+
+    function isValidGoal(data) {
+      return data.keys().hasAll(['id', 'title', 'targetDate', 'category', 'progress', 'completed'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.targetDate is string
+        && data.category is string && data.category.size() <= 50
+        && data.progress is int
+        && data.completed is bool;
+    }
+
+    function isValidCalendarEvent(data) {
+      return data.keys().hasAll(['id', 'title', 'start', 'end', 'type'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.start is string
+        && data.end is string
+        && data.type in ['class', 'assignment', 'exam', 'personal', 'milestone'];
+    }
+
+    function isValidNote(data) {
+      return data.keys().hasAll(['id', 'title', 'content', 'lastModified', 'tags'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.content is string && data.content.size() <= 50000;
+    }
+
+    function isValidNotificationItem(data) {
+      return data.keys().hasAll(['id', 'title', 'message', 'timestamp', 'read', 'type'])
+        && data.id is string
+        && data.title is string && data.title.size() <= 150
+        && data.message is string && data.message.size() <= 500
+        && data.read is bool
+        && data.type in ['info', 'warning', 'success', 'deadline'];
+    }
+
+    // ---------------- COLLECTION PATH RULES ----------------
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidStudentProfile(incoming());
+      allow update: if isOwner(userId) && isValidStudentProfile(incoming());
+      allow delete: if false; // Profiles are immortal under normal workflow
+
+      // Courses Subcollection
+      match /courses/{courseId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(courseId) && isValidCourse(incoming());
+        allow update: if isOwner(userId) && isValidId(courseId) && isValidCourse(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Assignments Subcollection
+      match /assignments/{assignmentId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(assignmentId) && isValidAssignment(incoming());
+        allow update: if isOwner(userId) && isValidId(assignmentId) && isValidAssignment(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Semesters Subcollection
+      match /semesters/{semesterId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(semesterId) && isValidSemester(incoming());
+        allow update: if isOwner(userId) && isValidId(semesterId) && isValidSemester(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Hackathons Subcollection
+      match /hackathons/{hackathonId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(hackathonId) && isValidHackathon(incoming());
+        allow update: if isOwner(userId) && isValidId(hackathonId) && isValidHackathon(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // CodingProfiles Subcollection
+      match /codingProfiles/{profileId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(profileId) && isValidCodingProfile(incoming());
+        allow update: if isOwner(userId) && isValidId(profileId) && isValidCodingProfile(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Applications Subcollection
+      match /applications/{appId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(appId) && isValidInternshipApplication(incoming());
+        allow update: if isOwner(userId) && isValidId(appId) && isValidInternshipApplication(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Projects Subcollection
+      match /projects/{projectId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(projectId) && isValidProject(incoming());
+        allow update: if isOwner(userId) && isValidId(projectId) && isValidProject(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // ResearchPapers Subcollection
+      match /researchPapers/{paperId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(paperId) && isValidResearchPaper(incoming());
+        allow update: if isOwner(userId) && isValidId(paperId) && isValidResearchPaper(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Certificates Subcollection
+      match /certificates/{certId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(certId) && isValidCertificate(incoming());
+        allow update: if isOwner(userId) && isValidId(certId) && isValidCertificate(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // FinanceTransactions Subcollection
+      match /transactions/{transId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(transId) && isValidFinanceTransaction(incoming());
+        allow update: if isOwner(userId) && isValidId(transId) && isValidFinanceTransaction(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Goals Subcollection
+      match /goals/{goalId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(goalId) && isValidGoal(incoming());
+        allow update: if isOwner(userId) && isValidId(goalId) && isValidGoal(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // CalendarEvents Subcollection
+      match /calendarEvents/{eventId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(eventId) && isValidCalendarEvent(incoming());
+        allow update: if isOwner(userId) && isValidId(eventId) && isValidCalendarEvent(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Notes Subcollection
+      match /notes/{noteId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(noteId) && isValidNote(incoming());
+        allow update: if isOwner(userId) && isValidId(noteId) && isValidNote(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // Notifications Subcollection
+      match /notifications/{notifId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(notifId) && isValidNotificationItem(incoming());
+        allow update: if isOwner(userId) && isValidId(notifId) && isValidNotificationItem(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

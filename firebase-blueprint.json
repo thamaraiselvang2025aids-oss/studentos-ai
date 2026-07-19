@@ -1,0 +1,292 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Core profile document containing student information and academic streaks.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "email": { "type": "string", "format": "email" },
+        "university": { "type": "string", "maxLength": 150 },
+        "major": { "type": "string", "maxLength": 100 },
+        "graduationYear": { "type": "integer" },
+        "streakCount": { "type": "integer" },
+        "lastActive": { "type": "string" }
+      },
+      "required": ["uid", "fullName", "email", "university", "major", "graduationYear", "streakCount", "lastActive"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic course offering inside a specific semester, storing attendance percentages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "code": { "type": "string", "maxLength": 15 },
+        "name": { "type": "string", "maxLength": 100 },
+        "instructor": { "type": "string", "maxLength": 100 },
+        "credits": { "type": "integer" },
+        "grade": { "type": "string", "maxLength": 5 },
+        "semesterId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "attendancePresent": { "type": "integer" },
+        "attendanceAbsent": { "type": "integer" }
+      },
+      "required": ["id", "code", "name", "credits", "semesterId", "attendancePresent", "attendanceAbsent"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "An academic assignment or homework due with status, priority, and countdown triggers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "courseId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "dueDate": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "notes": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "title", "courseId", "dueDate", "priority", "status"]
+    },
+    "Semester": {
+      "title": "Semester",
+      "description": "Holds the targets and GPAs for an academic period.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 100 },
+        "targetGPA": { "type": "number" },
+        "currentGPA": { "type": "number" }
+      },
+      "required": ["id", "title", "targetGPA"]
+    },
+    "Hackathon": {
+      "title": "Hackathon",
+      "description": "Tracks team milestones, pitch checklist, and ideas for hackathons.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "maxLength": 100 },
+        "date": { "type": "string" },
+        "teamSize": { "type": "integer" },
+        "rolesRequired": { "type": "array" },
+        "ideas": { "type": "array" },
+        "milestones": { "type": "array" },
+        "status": { "type": "string", "enum": ["planning", "registered", "submitted", "won", "ended"] },
+        "notes": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "name", "date", "status"]
+    },
+    "CodingProfile": {
+      "title": "CodingProfile",
+      "description": "Tracks Leetcode, Codeforces, or GitHub progress metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "platform": { "type": "string", "enum": ["LeetCode", "Codeforces", "GitHub", "HackerRank"] },
+        "username": { "type": "string", "maxLength": 100 },
+        "solvedCount": { "type": "integer" },
+        "easyCount": { "type": "integer" },
+        "mediumCount": { "type": "integer" },
+        "hardCount": { "type": "integer" },
+        "rating": { "type": "number" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["id", "platform", "username", "solvedCount", "lastUpdated"]
+    },
+    "InternshipApplication": {
+      "title": "InternshipApplication",
+      "description": "Internship and job application tracker document.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "company": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["wishlist", "applied", "online_test", "interview", "offer", "rejected"] },
+        "appliedDate": { "type": "string" },
+        "nextDeadline": { "type": "string" },
+        "salary": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "company", "role", "status", "appliedDate"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Tracks software development projects, technical stacks, and task breakdowns.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "techStack": { "type": "array" },
+        "repoUrl": { "type": "string" },
+        "liveUrl": { "type": "string" },
+        "tasks": { "type": "array" },
+        "status": { "type": "string", "enum": ["idea", "in_progress", "completed"] }
+      },
+      "required": ["id", "title", "description", "status"]
+    },
+    "ResearchPaper": {
+      "title": "ResearchPaper",
+      "description": "Tracks research draft milestones, journals, and manuscripts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 200 },
+        "abstract": { "type": "string", "maxLength": 2000 },
+        "authors": { "type": "string", "maxLength": 300 },
+        "journal": { "type": "string", "maxLength": 150 },
+        "status": { "type": "string", "enum": ["writing", "reviewing", "accepted", "published"] },
+        "docLink": { "type": "string" },
+        "notes": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "title", "authors", "status"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Holds credentials, issue dates, and issuers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "issuer": { "type": "string", "maxLength": 100 },
+        "issueDate": { "type": "string" },
+        "credentialUrl": { "type": "string" },
+        "category": { "type": "string", "enum": ["academic", "technical", "soft_skills", "extracurricular"] }
+      },
+      "required": ["id", "title", "issuer", "issueDate", "category"]
+    },
+    "FinanceTransaction": {
+      "title": "FinanceTransaction",
+      "description": "Logs financial inputs and spending expenses.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string", "maxLength": 50 },
+        "amount": { "type": "number" },
+        "date": { "type": "string" },
+        "description": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["id", "type", "category", "amount", "date", "description"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Logs student semester and personal targets.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "targetDate": { "type": "string" },
+        "category": { "type": "string", "maxLength": 50 },
+        "progress": { "type": "integer" },
+        "completed": { "type": "boolean" }
+      },
+      "required": ["id", "title", "targetDate", "category", "progress", "completed"]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "Logs schedule entries, exams, and classes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "start": { "type": "string" },
+        "end": { "type": "string" },
+        "description": { "type": "string", "maxLength": 1000 },
+        "courseId": { "type": "string" },
+        "type": { "type": "string", "enum": ["class", "assignment", "exam", "personal", "milestone"] }
+      },
+      "required": ["id", "title", "start", "end", "type"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "Student notes with tag associations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "content": { "type": "string", "maxLength": 50000 },
+        "lastModified": { "type": "string" },
+        "tags": { "type": "array" }
+      },
+      "required": ["id", "title", "content", "lastModified", "tags"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "Represents user notifications and alarms.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 500 },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["info", "warning", "success", "deadline"] }
+      },
+      "required": ["id", "title", "message", "timestamp", "read", "type"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "StudentProfile",
+      "description": "Core profile for each student user"
+    },
+    "users/{userId}/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Student's courses"
+    },
+    "users/{userId}/assignments/{assignmentId}": {
+      "schema": "Assignment",
+      "description": "Student's tasks & assignments"
+    },
+    "users/{userId}/semesters/{semesterId}": {
+      "schema": "Semester",
+      "description": "Semesters targets"
+    },
+    "users/{userId}/hackathons/{hackathonId}": {
+      "schema": "Hackathon",
+      "description": "Hackathons entered"
+    },
+    "users/{userId}/codingProfiles/{profileId}": {
+      "schema": "CodingProfile",
+      "description": "Developer profile records"
+    },
+    "users/{userId}/applications/{appId}": {
+      "schema": "InternshipApplication",
+      "description": "Job application processes"
+    },
+    "users/{userId}/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Build projects"
+    },
+    "users/{userId}/researchPapers/{paperId}": {
+      "schema": "ResearchPaper",
+      "description": "Academic papers and writeups"
+    },
+    "users/{userId}/certificates/{certId}": {
+      "schema": "Certificate",
+      "description": "Student achievements"
+    },
+    "users/{userId}/transactions/{transId}": {
+      "schema": "FinanceTransaction",
+      "description": "Financial records"
+    },
+    "users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Target goals"
+    },
+    "users/{userId}/calendarEvents/{eventId}": {
+      "schema": "CalendarEvent",
+      "description": "Events in the calendar schedule"
+    },
+    "users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Student quick notes"
+    },
+    "users/{userId}/notifications/{notifId}": {
+      "schema": "NotificationItem",
+      "description": "Student warning notifications"
+    }
+  }
+}

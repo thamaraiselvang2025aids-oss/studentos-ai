@@ -1,0 +1,6 @@
+{
+  "name": "StudentOS AI",
+  "description": "Premium productivity platform for students managing academic tracking, coding milestones, placements, and AI-powered study assistance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
