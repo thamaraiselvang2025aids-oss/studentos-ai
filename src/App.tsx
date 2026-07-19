@@ -22,12 +22,15 @@ import {
   CheckCircle,
   AlertTriangle,
   Flame,
-  Check
+  Check,
+  Menu,
+  ShieldCheck
 } from 'lucide-react';
 
 function AppContent() {
   const { authUser, authLoading, activeTab, notifications, markNotificationRead, clearAllNotifications } = useStudentOS();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Active subview map router
   const renderActiveView = () => {
@@ -74,10 +77,29 @@ function AppContent() {
   return (
     <div className="flex w-screen h-screen bg-[#08090c] overflow-hidden select-none relative">
       {/* Sidebar navigation */}
-      <Sidebar onOpenNotifications={() => setShowNotifications(true)} />
+      <div className={`${isSidebarOpen ? 'fixed inset-y-0 left-0 z-40 block' : 'hidden'} md:block md:relative`}>
+        <Sidebar onOpenNotifications={() => setShowNotifications(true)} onCloseSidebar={() => setIsSidebarOpen(false)} />
+      </div>
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+      )}
 
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col relative h-full min-w-0">
+        {/* Mobile Header Bar */}
+        <div className="md:hidden flex items-center justify-between bg-[#141417] p-4 border-b border-[#27272A] shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded bg-indigo-600 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-white font-bold font-mono tracking-wider text-sm">STUDENT-OS</span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(true)} className="text-gray-300 hover:text-white cursor-pointer p-1">
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
+        
         {renderActiveView()}
       </main>
 

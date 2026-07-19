@@ -50,7 +50,7 @@ export default function Hackathons() {
         { id: `m2_${Date.now()}`, title: 'Build system skeleton, views, and server routes', completed: false },
         { id: `m3_${Date.now()}`, title: 'Polish aesthetics, compile client, and record video', completed: false }
       ],
-      status: 'registered'
+      status: 'register'
     });
     setHName('');
     setHDate('');
@@ -123,6 +123,21 @@ export default function Hackathons() {
                         <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded font-mono font-bold">
                           Date: {hack.date}
                         </span>
+                        {/* Deadline Countdown Logic */}
+                        {(() => {
+                          if (hack.status === 'complete') return null;
+                          const hackDate = new Date(hack.date);
+                          if (isNaN(hackDate.getTime())) return null; // Invalid date format
+                          const diffTime = Math.ceil((hackDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                          if (diffTime < 0) {
+                            return <span className="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded font-mono font-bold">Past Due</span>;
+                          }
+                          return (
+                            <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded font-mono font-bold">
+                              {diffTime === 0 ? 'Today' : `${diffTime} days left`}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <p className="text-xs text-gray-600 mt-1.5 font-sans">
                         Team Size: <span className="font-semibold text-gray-900">{hack.teamSize}</span> • Roles: {hack.rolesRequired.join(', ') || 'Any'}
@@ -137,6 +152,20 @@ export default function Hackathons() {
                       >
                         <Sparkles className="w-3.5 h-3.5 animate-pulse text-purple-600" /> Brainstorm AI Pitch Concepts
                       </button>
+
+                      {/* Hackathon Status Dropdown */}
+                      <div className="mt-4 flex items-center gap-2">
+                        <span className="text-[10px] text-gray-500 font-bold uppercase font-mono">Status:</span>
+                        <select
+                          value={hack.status}
+                          onChange={(e) => updateHackathon(hack.id, { status: e.target.value as 'register' | 'submit' | 'complete' })}
+                          className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
+                        >
+                          <option value="register">Register</option>
+                          <option value="submit">Submit</option>
+                          <option value="complete">Complete</option>
+                        </select>
+                      </div>
                     </div>
 
                     {/* Milestones checklist status */}

@@ -18,14 +18,16 @@ import {
   Award,
   Trophy,
   Terminal,
-  FileText
+  FileText,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
   onOpenNotifications: () => void;
+  onCloseSidebar?: () => void;
 }
 
-export default function Sidebar({ onOpenNotifications }: SidebarProps) {
+export default function Sidebar({ onOpenNotifications, onCloseSidebar }: SidebarProps) {
   const {
     signOutUser,
     activeTab,
@@ -95,7 +97,7 @@ export default function Sidebar({ onOpenNotifications }: SidebarProps) {
     <aside className="w-64 h-screen bg-[#0F0F12] border-r border-[#27272A] flex flex-col justify-between shrink-0 select-none text-gray-300 font-sans z-30">
       <div className="flex flex-col h-full overflow-y-auto">
         {/* Compact ERP Header */}
-        <div className="p-4 border-b border-[#27272A] bg-[#141417]">
+        <div className="p-4 border-b border-[#27272A] bg-[#141417] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded bg-indigo-600 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4 text-white" />
@@ -107,6 +109,11 @@ export default function Sidebar({ onOpenNotifications }: SidebarProps) {
               <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">Admin Management Console</p>
             </div>
           </div>
+          {onCloseSidebar && (
+            <button onClick={onCloseSidebar} className="md:hidden text-gray-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Search Input widget */}

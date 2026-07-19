@@ -37,7 +37,7 @@ export interface Hackathon {
   rolesRequired: string[];
   ideas: string[];
   milestones: { id: string; title: string; completed: boolean }[];
-  status: 'planning' | 'registered' | 'submitted' | 'won' | 'ended';
+  status: 'register' | 'submit' | 'complete';
   notes?: string;
 }
 

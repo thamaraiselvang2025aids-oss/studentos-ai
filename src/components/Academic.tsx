@@ -41,7 +41,7 @@ export default function Academic() {
 
   // Create semester states
   const [semTitle, setSemTitle] = useState('');
-  const [semTargetGpa, setSemTargetGpa] = useState(3.8);
+  const [semTargetGpa, setSemTargetGpa] = useState(9.0);
 
   // AI Planner modal state
   const [aiPlanCourse, setAiPlanCourse] = useState<Course | null>(null);
@@ -106,17 +106,15 @@ export default function Academic() {
   // GPA Weight converter
   const getGradeValue = (grade: string): number => {
     switch (grade.toUpperCase()) {
-      case 'A+': return 4.0;
-      case 'A': return 4.0;
-      case 'A-': return 3.7;
-      case 'B+': return 3.3;
-      case 'B': return 3.0;
-      case 'B-': return 2.7;
-      case 'C+': return 2.3;
-      case 'C': return 2.0;
-      case 'D': return 1.0;
+      case 'O': return 10.0;
+      case 'A+': return 9.0;
+      case 'A': return 8.0;
+      case 'B+': return 7.0;
+      case 'B': return 6.0;
+      case 'C': return 5.0;
+      case 'U': return 0.0;
       case 'F': return 0.0;
-      default: return 4.0;
+      default: return 10.0;
     }
   };
 
@@ -221,7 +219,7 @@ export default function Academic() {
                             className="bg-white text-xs text-gray-700 border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
                           >
                             <option value="">Expected Grade...</option>
-                            {['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'D', 'F'].map((g) => (
+                            {['O', 'A+', 'A', 'B+', 'B', 'C', 'U', 'F'].map((g) => (
                               <option key={g} value={g}>Grade: {g}</option>
                             ))}
                           </select>
@@ -406,12 +404,12 @@ export default function Academic() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 font-bold uppercase font-mono mb-1.5">Target GPA (1.00 - 4.00)</label>
+                <label className="block text-xs text-gray-500 font-bold uppercase font-mono mb-1.5">Target GPA (1.00 - 10.00)</label>
                 <input
                   type="number"
                   step="0.05"
                   min="1"
-                  max="4"
+                  max="10"
                   value={semTargetGpa}
                   onChange={(e) => setSemTargetGpa(Number(e.target.value))}
                   required

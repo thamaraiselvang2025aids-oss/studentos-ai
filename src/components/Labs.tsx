@@ -37,7 +37,7 @@ export default function Labs() {
   const [codeAttempt, setCodeAttempt] = useState('function bfs(graph, start) {\n  let queue = [start];\n  let visited = new Set([start]);\n  // ...\n}');
 
   // Sandbox states
-  const [sandboxCode, setSandboxCode] = useState(`// Welcome to StudentOS Compiler Sandbox\n// Select a challenge or write code and click Run!\n\nfunction solve(n) {\n    let sequence = [0, 1];\n    for (let i = 2; i < n; i++) {\n        sequence.push(sequence[i-1] + sequence[i-2]);\n    }\n    return sequence.slice(0, n);\n}\n\nconsole.log(solve(8));`);
+  const [sandboxCode, setSandboxCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Welcome to StudentOS C++ Compiler Terminal!\\n";\n    int n = 8;\n    int t1 = 0, t2 = 1, nextTerm = 0;\n    \n    cout << "Fibonacci Series: ";\n    for (int i = 1; i <= n; ++i) {\n        if(i == 1) {\n            cout << t1 << " ";\n            continue;\n        }\n        if(i == 2) {\n            cout << t2 << " ";\n            continue;\n        }\n        nextTerm = t1 + t2;\n        t1 = t2;\n        t2 = nextTerm;\n        cout << nextTerm << " ";\n    }\n    return 0;\n}`);
   const [sandboxOutput, setSandboxOutput] = useState<string[]>([
     'Sandbox virtual environment established.',
     'Ready for sandbox code execution.'
@@ -74,37 +74,40 @@ export default function Labs() {
     }
   };
 
-  const handleRunSandbox = () => {
+  const handleRunSandbox = async () => {
     setSandboxRunning(true);
-    const logs: string[] = [];
-    const originalLog = console.log;
-    console.log = (...args) => {
-      logs.push(args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg)).join(' '));
-    };
-
-    setTimeout(() => {
-      try {
-        // Safe evaluation simulation
-        const result = new Function(sandboxCode)();
-        if (result !== undefined) {
-          logs.push(`Returned result: ${JSON.stringify(result)}`);
-        }
+    setSandboxOutput(['[Compiling & Executing on Remote Server...]']);
+    try {
+      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: "cpp",
+          version: "10.2.0",
+          files: [{ content: sandboxCode }]
+        })
+      });
+      const data = await res.json();
+      
+      if (data.run && data.run.output) {
+        const outputLines = data.run.output.split('\\n');
         setSandboxOutput([
-          `[Compilation Success - ${new Date().toLocaleTimeString()}]`,
-          ...logs,
-          '-- Sandbox Terminated successfully --'
+          `[Execution Success - ${new Date().toLocaleTimeString()}]`,
+          ...outputLines,
+          '-- Execution Finished --'
         ]);
-      } catch (err: any) {
-        setSandboxOutput([
-          `[Compilation Error - ${new Date().toLocaleTimeString()}]`,
-          `Error: ${err.message}`,
-          '-- Execution Interrupted --'
-        ]);
-      } finally {
-        console.log = originalLog;
-        setSandboxRunning(false);
+      } else {
+        setSandboxOutput(['Error: Failed to get execution output from server.']);
       }
-    }, 450);
+    } catch (err: any) {
+      setSandboxOutput([
+        `[Compilation Error - ${new Date().toLocaleTimeString()}]`,
+        `Error: ${err.message}`,
+        '-- Execution Interrupted --'
+      ]);
+    } finally {
+      setSandboxRunning(false);
+    }
   };
 
   return (
@@ -127,17 +130,17 @@ export default function Labs() {
           <div className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-gray-950 uppercase font-mono tracking-wider flex items-center gap-2">
-                <Code2 className="w-5 h-5 text-purple-600" /> JS Compile Sandbox
+                <Code2 className="w-5 h-5 text-purple-600" /> C++ Compile Terminal
               </h2>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setSandboxCode(`function solve(arr) {\n    return arr.filter(n => n % 2 === 0);\n}\n\nconsole.log(solve([1, 2, 3, 4, 5, 6, 7, 8]));`)}
+                  onClick={() => setSandboxCode(`#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    vector<int> arr = {1, 2, 3, 4, 5, 6, 7, 8};\n    cout << "Even Numbers: ";\n    for(int n : arr) {\n        if (n % 2 == 0) cout << n << " ";\n    }\n    return 0;\n}`)}
                   className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
                 >
                   Filter Even
                 </button>
                 <button
-                  onClick={() => setSandboxCode(`function solve(str) {\n    return str.split('').reverse().join('');\n}\n\nconsole.log(solve("StudentOS Labs"));`)}
+                  onClick={() => setSandboxCode(`#include <iostream>\n#include <string>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    string str = "StudentOS Labs";\n    reverse(str.begin(), str.end());\n    cout << "Reversed: " << str << endl;\n    return 0;\n}`)}
                   className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
                 >
                   Reverse Str
@@ -169,7 +172,7 @@ export default function Labs() {
                     disabled={sandboxRunning}
                     className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold font-mono text-xs uppercase rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Run Sandbox Script
+                    <Play className="w-3.5 h-3.5 fill-current" /> Compile & Run C++
                   </button>
                   <button
                     onClick={() => {
