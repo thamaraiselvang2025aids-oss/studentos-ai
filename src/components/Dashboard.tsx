@@ -73,35 +73,48 @@ export default function Dashboard() {
   const [activeTableTab, setActiveTableTab] = useState<'assignments' | 'hackathons' | 'coding' | 'projects' | 'internships' | 'certificates'>('assignments');
 
   // Today's custom checkbox tasks (persisted locally)
-  const [todayTasks, setTodayTasks] = useState<{ id: string; text: string; done: boolean }[]>(() => {
-    const stored = localStorage.getItem('student_os_today_tasks');
-    if (stored) {
-      try { return JSON.parse(stored); } catch (e) { /* ignore */ }
-    }
-    return [
-      { id: '1', text: 'Prepare CS 301 homework proofs', done: false },
-      { id: '2', text: 'Optimize Red-Black node operations', done: true },
-      { id: '3', text: 'Apply for Google SWE Summer Intern role', done: false },
-      { id: '4', text: 'Draft abstract for IEEE research submission', done: false }
-    ];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('student_os_today_tasks', JSON.stringify(todayTasks));
-  }, [todayTasks]);
+  const [todayTasks, setTodayTasks] = useState<{ id: string; text: string; done: boolean }[]>([]);
 
   // Quick Notes persistence
-  const [scratchMemo, setScratchMemo] = useState<string>(() => {
-    return localStorage.getItem('student_os_dashboard_memo') || 
-      "• Master Theorem cases:\n  Case 1: T(n) = aT(n/b) + n^c when c < log_b(a)\n  Case 2: T(n) = n^c log^k(n) when c = log_b(a)\n• Next placement coding sprint starts on Sunday.\n• Check AWS credits for final research prototype.";
-  });
+  const [scratchMemo, setScratchMemo] = useState<string>('');
 
   useEffect(() => {
-    localStorage.setItem('student_os_dashboard_memo', scratchMemo);
-  }, [scratchMemo]);
+    if (!profile.uid) return;
+    const stored = localStorage.getItem(`student_os_${profile.uid}_today_tasks`);
+    if (stored) {
+      try {
+        setTodayTasks(JSON.parse(stored));
+      } catch (e) {
+        setTodayTasks([]);
+      }
+    } else {
+      setTodayTasks([]);
+    }
+
+    const storedMemo = localStorage.getItem(`student_os_${profile.uid}_dashboard_memo`);
+    setScratchMemo(storedMemo || '');
+  }, [profile.uid]);
+
+  // Wrapped updater to save to user-scoped storage
+  const updateTodayTasks = (newTasks: { id: string; text: string; done: boolean }[] | ((prev: { id: string; text: string; done: boolean }[]) => { id: string; text: string; done: boolean }[])) => {
+    setTodayTasks((prev) => {
+      const next = typeof newTasks === 'function' ? newTasks(prev) : newTasks;
+      if (profile.uid) {
+        localStorage.setItem(`student_os_${profile.uid}_today_tasks`, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  const updateScratchMemo = (newMemo: string) => {
+    setScratchMemo(newMemo);
+    if (profile.uid) {
+      localStorage.setItem(`student_os_${profile.uid}_dashboard_memo`, newMemo);
+    }
+  };
 
   // AI Advice state
-  const [aiTip, setAiTip] = useState<string>("Review Advanced Algorithms (CS 301) dynamic programming lectures today. Your attendance is 90% but assignment 1 is due in 3 days.");
+  const [aiTip, setAiTip] = useState<string>("Welcome to StudentOS! Click 'Sync AI' to fetch dynamic study plan recommendations.");
   const [isGeneratingTip, setIsGeneratingTip] = useState(false);
 
   // Quick Add State selectors
@@ -160,12 +173,12 @@ export default function Dashboard() {
   const handleAddTodayTask = () => {
     const text = prompt('Enter new daily task text:');
     if (text) {
-      setTodayTasks([...todayTasks, { id: String(Date.now()), text, done: false }]);
+      updateTodayTasks([...todayTasks, { id: String(Date.now()), text, done: false }]);
     }
   };
 
   const toggleTodayTask = (id: string) => {
-    setTodayTasks(todayTasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    updateTodayTasks(todayTasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
   const handleTriggerAIEngine = async () => {
@@ -467,7 +480,7 @@ export default function Dashboard() {
                         <span className={`${task.done ? 'line-through text-gray-400' : 'text-gray-700 font-medium'}`}>{task.text}</span>
                       </div>
                       <button
-                        onClick={() => setTodayTasks(todayTasks.filter(t => t.id !== task.id))}
+                        onClick={() => updateTodayTasks(todayTasks.filter(t => t.id !== task.id))}
                         className="text-gray-400 hover:text-red-500"
                         title="Delete task"
                       >
@@ -493,7 +506,7 @@ export default function Dashboard() {
                 </div>
                 <textarea
                   value={scratchMemo}
-                  onChange={(e) => setScratchMemo(e.target.value)}
+                  onChange={(e) => updateScratchMemo(e.target.value)}
                   placeholder="Type temporary lecture notes, formulae or memory triggers..."
                   className="w-full bg-gray-50 text-xs text-gray-800 p-2.5 rounded-lg border border-gray-200 h-32 focus:outline-none focus:border-indigo-500 resize-none font-sans leading-relaxed placeholder-gray-400"
                 />
@@ -635,7 +648,7 @@ export default function Dashboard() {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Stanford AI Hackathon"
+                          placeholder="e.g. AI Innovation Hackathon"
                           value={newHackName}
                           onChange={e => setNewHackName(e.target.value)}
                           className="w-full bg-white text-xs text-gray-800 px-2.5 py-1.5 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"

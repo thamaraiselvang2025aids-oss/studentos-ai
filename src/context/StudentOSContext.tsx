@@ -20,115 +20,51 @@ import {
 } from '../types';
 import { firebaseAuth, AuthUser } from '../lib/firebase';
 
-// Initial Mock Datasets to deliver a high-fidelity visual experience out of the box
-const initialProfile: StudentProfile = {
-  uid: 'guest_user_123',
-  fullName: 'Alex Mercer',
-  email: 'alex.mercer@university.edu',
-  university: 'Stanford University',
-  major: 'Computer Science',
-  graduationYear: 2027,
-  streakCount: 5,
-  lastActive: new Date().toISOString()
-};
+// Custom hook to manage user-scoped state synced with localStorage
+function useUserScopedState<T>(key: string, initial: T, authUser: AuthUser | null) {
+  const getStoredForUser = (userVal: AuthUser | null): T => {
+    if (!userVal) return initial;
+    const value = localStorage.getItem(`student_os_${userVal.uid}_${key}`);
+    if (value) {
+      try {
+        return JSON.parse(value);
+      } catch (err) {
+        return initial;
+      }
+    }
+    if (key === 'profile') {
+      return {
+        uid: userVal.uid,
+        fullName: userVal.displayName || '',
+        email: userVal.email || '',
+        university: '',
+        major: '',
+        graduationYear: new Date().getFullYear() + 4,
+        streakCount: 1,
+        lastActive: new Date().toISOString()
+      } as unknown as T;
+    }
+    return initial;
+  };
 
-const initialSemesters: Semester[] = [
-  { id: 'sem_1', title: 'Fall 2026 (Current)', targetGPA: 3.9, currentGPA: 3.82 }
-];
+  const [state, setStateInternal] = useState<T>(() => getStoredForUser(authUser));
 
-const initialCourses: Course[] = [
-  { id: 'c_1', code: 'CS 301', name: 'Advanced Algorithms', instructor: 'Prof. Cormen', credits: 4, semesterId: 'sem_1', attendancePresent: 18, attendanceAbsent: 2 },
-  { id: 'c_2', code: 'MATH 201', name: 'Discrete Mathematics', instructor: 'Dr. Euler', credits: 3, semesterId: 'sem_1', attendancePresent: 15, attendanceAbsent: 1 },
-  { id: 'c_3', code: 'CS 380', name: 'Database Systems', instructor: 'Dr. Codd', credits: 4, semesterId: 'sem_1', attendancePresent: 14, attendanceAbsent: 4 }
-];
+  useEffect(() => {
+    setStateInternal(getStoredForUser(authUser));
+  }, [authUser, key]);
 
-const initialAssignments: Assignment[] = [
-  { id: 'a_1', title: 'Red-Black Tree Optimization Lab', courseId: 'c_1', dueDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], priority: 'high', status: 'pending', notes: 'Implement deletion and self-balancing verification modules.' },
-  { id: 'a_2', title: 'Graph Isomorphism Theorem Sheet', courseId: 'c_2', dueDate: new Date(Date.now() + 86400000 * 1).toISOString().split('T')[0], priority: 'medium', status: 'pending', notes: 'Work through questions 1-5 regarding isomorphic matrices.' },
-  { id: 'a_3', title: 'SQL Tuning & Query Plan Analysis', courseId: 'c_3', dueDate: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], priority: 'low', status: 'completed', notes: 'Benchmark nested queries versus hash index setups.' }
-];
+  const setState = (value: T | ((prev: T) => T)) => {
+    setStateInternal((prev) => {
+      const next = typeof value === 'function' ? (value as Function)(prev) : value;
+      if (authUser) {
+        localStorage.setItem(`student_os_${authUser.uid}_${key}`, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
-const initialHackathons: Hackathon[] = [
-  {
-    id: 'h_1',
-    name: 'Global AI Innovation Hack',
-    date: new Date(Date.now() + 86400000 * 15).toISOString().split('T')[0],
-    teamSize: 3,
-    rolesRequired: ['UI/UX Designer', 'FastAPI Developer'],
-    ideas: ['AI-driven flashcard synthesizers', 'Collaborative interactive canvas graphs'],
-    milestones: [
-      { id: 'm_1', title: 'Form core team and draft UI wireframes', completed: true },
-      { id: 'm_2', title: 'Implement Gemini model grounding and test prompts', completed: false },
-      { id: 'm_3', title: 'Record 2-minute video pitch', completed: false }
-    ],
-    status: 'registered',
-    notes: 'Primary focus: Student learning acceleration.'
-  }
-];
-
-const initialCodingProfiles: CodingProfile[] = [
-  { id: 'cp_1', platform: 'LeetCode', username: 'alex_mercer', solvedCount: 142, easyCount: 60, mediumCount: 65, hardCount: 17, rating: 1850, lastUpdated: new Date().toISOString() },
-  { id: 'cp_2', platform: 'GitHub', username: 'alexmercer-dev', solvedCount: 418, lastUpdated: new Date().toISOString() }
-];
-
-const initialApplications: InternshipApplication[] = [
-  { id: 'app_1', company: 'Google', role: 'SWE Intern', status: 'interview', appliedDate: '2026-06-15', nextDeadline: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], salary: '$45/hr', notes: 'Technical round focusing on system performance and graphs.' },
-  { id: 'app_2', company: 'Stripe', role: 'Frontend Engineer Intern', status: 'online_test', appliedDate: '2026-07-01', nextDeadline: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], salary: '$50/hr', notes: 'Highly focused on component engineering and standard layouts.' }
-];
-
-const initialProjects: Project[] = [
-  {
-    id: 'p_1',
-    title: 'EduSphere AI Graph Parser',
-    description: 'A tool that parses slides into visual interactive node graphs using vector similarity searches.',
-    techStack: ['React', 'Tailwind CSS', 'Vite', 'Express', 'Gemini'],
-    repoUrl: 'https://github.com/alexmercer/edusphere-graph',
-    liveUrl: 'https://edusphere-demo.dev',
-    tasks: [
-      { id: 'pt_1', title: 'Build interactive canvas coordinate mapper', completed: true },
-      { id: 'pt_2', title: 'Connect server-side Gemini summary parser', completed: false }
-    ],
-    status: 'in_progress'
-  }
-];
-
-const initialResearchPapers: ResearchPaper[] = [
-  { id: 'rp_1', title: 'Vector Quantized Contrastive Learning in Adaptive Tutoring Systems', authors: 'Alex Mercer, Prof. Sarah Jenkins', journal: 'IEEE Transactions on Learning Technologies', status: 'writing', notes: 'Drafting section 4 regarding hyperparameter tuning results.' }
-];
-
-const initialCertificates: Certificate[] = [
-  { id: 'cert_1', title: 'Stanford Neural Networks and Deep Learning', issuer: 'Stanford Online / Coursera', issueDate: '2025-11-20', credentialUrl: 'https://coursera.org/verify/stanford-dl', category: 'technical' }
-];
-
-const initialAchievements: Achievement[] = [
-  { id: 'ach_1', title: 'First Place Winner - Stanford TreeHacks 2026', organization: 'Stanford University / MLH', date: '2026-02-15', description: 'Built an AI-powered lecture-to-mindmap graph generation tool, beating out 300+ other student teams.', awardAmount: '$5,000', category: 'competition' },
-  { id: 'ach_2', title: 'Dean\'s List Academic Excellence Honors', organization: 'Stanford University', date: '2025-12-18', description: 'Maintained a perfect 4.0 GPA during the Autumn 2025 semester.', category: 'academic' }
-];
-
-const initialFinanceTransactions: FinanceTransaction[] = [
-  { id: 'f_1', type: 'income', category: 'Research Fellowship Stipend', amount: 1200, date: '2026-07-01', description: 'Monthly teaching/research stipend allocation.' },
-  { id: 'f_2', type: 'expense', category: 'Textbooks & Software License', amount: 145, date: '2026-07-05', description: 'CS 301 textbook and visual graph charting tools license.' },
-  { id: 'f_3', type: 'expense', category: 'Coffee & Cafeteria Spend', amount: 32, date: '2026-07-12', description: 'Late night coding fuel.' }
-];
-
-const initialGoals: Goal[] = [
-  { id: 'g_1', title: 'Reach 200 Solved Problems on LeetCode', targetDate: '2026-09-01', category: 'Coding', progress: 71, completed: false },
-  { id: 'g_2', title: 'Maintain attendance above 90% in CS 301', targetDate: '2026-12-15', category: 'Academic', progress: 90, completed: false }
-];
-
-const initialCalendarEvents: CalendarEvent[] = [
-  { id: 'e_1', title: 'CS 301: Advanced Algorithms Lecture', start: new Date().toISOString().split('T')[0] + 'T10:00:00', end: new Date().toISOString().split('T')[0] + 'T11:30:00', type: 'class', description: 'Weekly focus: dynamic programming vs memoization schemes.' },
-  { id: 'e_2', title: 'Discrete Math Quizz Block', start: new Date(Date.now() + 86400000).toISOString().split('T')[0] + 'T14:00:00', end: new Date(Date.now() + 86400000).toISOString().split('T')[0] + 'T15:00:00', type: 'exam', description: 'Discrete probability counts.' }
-];
-
-const initialNotes: Note[] = [
-  { id: 'n_1', title: 'CS 301 Master Cheatsheet', content: '### CS 301 Master Formula Notes\n\n- **Master Theorem Formula**: \n  $T(n) = aT(n/b) + f(n)$\n- **Time Complexity Cases**:\n  1. If $f(n) = O(n^{\\log_b a - \\epsilon})$, then $T(n) = \\Theta(n^{\\log_b a})$\n  2. If $f(n) = \\Theta(n^{\\log_b a})$, then $T(n) = \\Theta(n^{\\log_b a} \\lg n)$\n  3. If $f(n) = \\Omega(n^{\\log_b a + \\epsilon})$, then $T(n) = \\Theta(f(n))$\n\n- **Dynamic Programming Core Checklist**:\n  - Identify subproblems.\n  - Define state variable.\n  - State recurrence relations.\n  - Implement memoization table (top-down or bottom-up).', lastModified: new Date().toISOString(), tags: ['CS301', 'Theory'] }
-];
-
-const initialNotifications: NotificationItem[] = [
-  { id: 'nt_1', title: 'Critical Attendance Warning', message: 'Database Systems attendance is sitting at 74%. Attend next class to push back to safety.', timestamp: new Date().toISOString(), read: false, type: 'warning' },
-  { id: 'nt_2', title: 'Assignment Due Alert', message: 'discrete Math sheet is due in less than 24 hours.', timestamp: new Date().toISOString(), read: false, type: 'deadline' }
-];
+  return [state, setState] as const;
+}
 
 interface StudentOSContextType {
   authUser: AuthUser | null;
@@ -231,104 +167,47 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOutUser = async () => {
+    localStorage.clear();
+    sessionStorage.clear();
     await firebaseAuth.signOut();
   };
 
-  // Local storage helper helper
-  const getStored = <T,>(key: string, initial: T): T => {
-    const value = localStorage.getItem(`student_os_${key}`);
-    if (value) {
-      try {
-        return JSON.parse(value);
-      } catch (err) {
-        return initial;
-      }
-    }
-    return initial;
-  };
+  // State Declarations backed by user-scoped hook
+  const [profile, setProfile] = useUserScopedState<StudentProfile>('profile', {
+    uid: '',
+    fullName: '',
+    email: '',
+    university: '',
+    major: '',
+    graduationYear: new Date().getFullYear() + 4,
+    streakCount: 0,
+    lastActive: ''
+  }, authUser);
 
-  // State Declarations backed by local save
-  const [profile, setProfile] = useState<StudentProfile>(() => getStored('profile', initialProfile));
-  const [semesters, setSemesters] = useState<Semester[]>(() => getStored('semesters', initialSemesters));
-  const [courses, setCourses] = useState<Course[]>(() => getStored('courses', initialCourses));
-  const [assignments, setAssignments] = useState<Assignment[]>(() => getStored('assignments', initialAssignments));
-  const [hackathons, setHackathons] = useState<Hackathon[]>(() => getStored('hackathons', initialHackathons));
-  const [codingProfiles, setCodingProfiles] = useState<CodingProfile[]>(() => getStored('codingProfiles', initialCodingProfiles));
-  const [applications, setApplications] = useState<InternshipApplication[]>(() => getStored('applications', initialApplications));
-  const [projects, setProjects] = useState<Project[]>(() => getStored('projects', initialProjects));
-  const [researchPapers, setResearchPapers] = useState<ResearchPaper[]>(() => getStored('researchPapers', initialResearchPapers));
-  const [certificates, setCertificates] = useState<Certificate[]>(() => getStored('certificates', initialCertificates));
-  const [achievements, setAchievements] = useState<Achievement[]>(() => getStored('achievements', initialAchievements));
-  const [transactions, setTransactions] = useState<FinanceTransaction[]>(() => getStored('transactions', initialFinanceTransactions));
-  const [goals, setGoals] = useState<Goal[]>(() => getStored('goals', initialGoals));
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => getStored('calendarEvents', initialCalendarEvents));
-  const [notes, setNotes] = useState<Note[]>(() => getStored('notes', initialNotes));
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => getStored('notifications', initialNotifications));
+  const [semesters, setSemesters] = useUserScopedState<Semester[]>('semesters', [], authUser);
+  const [courses, setCourses] = useUserScopedState<Course[]>('courses', [], authUser);
+  const [assignments, setAssignments] = useUserScopedState<Assignment[]>('assignments', [], authUser);
+  const [hackathons, setHackathons] = useUserScopedState<Hackathon[]>('hackathons', [], authUser);
+  const [codingProfiles, setCodingProfiles] = useUserScopedState<CodingProfile[]>('codingProfiles', [], authUser);
+  const [applications, setApplications] = useUserScopedState<InternshipApplication[]>('applications', [], authUser);
+  const [projects, setProjects] = useUserScopedState<Project[]>('projects', [], authUser);
+  const [researchPapers, setResearchPapers] = useUserScopedState<ResearchPaper[]>('researchPapers', [], authUser);
+  const [certificates, setCertificates] = useUserScopedState<Certificate[]>('certificates', [], authUser);
+  const [achievements, setAchievements] = useUserScopedState<Achievement[]>('achievements', [], authUser);
+  const [transactions, setTransactions] = useUserScopedState<FinanceTransaction[]>('transactions', [], authUser);
+  const [goals, setGoals] = useUserScopedState<Goal[]>('goals', [], authUser);
+  const [calendarEvents, setCalendarEvents] = useUserScopedState<CalendarEvent[]>('calendarEvents', [], authUser);
+  const [notes, setNotes] = useUserScopedState<Note[]>('notes', [], authUser);
+  const [notifications, setNotifications] = useUserScopedState<NotificationItem[]>('notifications', [], authUser);
 
-  const [sidebarTheme, setSidebarTheme] = useState<string>(() => getStored('sidebarTheme', 'violet'));
-  const [customCategories, setCustomCategories] = useState<{ academic: string; professional: string; general: string; }>(() => 
-    getStored('customCategories', { academic: 'Academic', professional: 'Professional', general: 'General' })
-  );
+  const [sidebarTheme, setSidebarTheme] = useUserScopedState<string>('sidebarTheme', 'violet', authUser);
+  const [customCategories, setCustomCategories] = useUserScopedState<{ academic: string; professional: string; general: string; }>('customCategories', { academic: 'Academic', professional: 'Professional', general: 'General' }, authUser);
 
   const updateCategoryLabel = (key: 'academic' | 'professional' | 'general', label: string) => {
     setCustomCategories(prev => ({ ...prev, [key]: label }));
   };
 
-  // Auto save hook whenever states mutate
-  useEffect(() => {
-    localStorage.setItem('student_os_profile', JSON.stringify(profile));
-  }, [profile]);
-  useEffect(() => {
-    localStorage.setItem('student_os_sidebarTheme', JSON.stringify(sidebarTheme));
-  }, [sidebarTheme]);
-  useEffect(() => {
-    localStorage.setItem('student_os_customCategories', JSON.stringify(customCategories));
-  }, [customCategories]);
-  useEffect(() => {
-    localStorage.setItem('student_os_semesters', JSON.stringify(semesters));
-  }, [semesters]);
-  useEffect(() => {
-    localStorage.setItem('student_os_courses', JSON.stringify(courses));
-  }, [courses]);
-  useEffect(() => {
-    localStorage.setItem('student_os_assignments', JSON.stringify(assignments));
-  }, [assignments]);
-  useEffect(() => {
-    localStorage.setItem('student_os_hackathons', JSON.stringify(hackathons));
-  }, [hackathons]);
-  useEffect(() => {
-    localStorage.setItem('student_os_codingProfiles', JSON.stringify(codingProfiles));
-  }, [codingProfiles]);
-  useEffect(() => {
-    localStorage.setItem('student_os_applications', JSON.stringify(applications));
-  }, [applications]);
-  useEffect(() => {
-    localStorage.setItem('student_os_projects', JSON.stringify(projects));
-  }, [projects]);
-  useEffect(() => {
-    localStorage.setItem('student_os_researchPapers', JSON.stringify(researchPapers));
-  }, [researchPapers]);
-  useEffect(() => {
-    localStorage.setItem('student_os_certificates', JSON.stringify(certificates));
-  }, [certificates]);
-  useEffect(() => {
-    localStorage.setItem('student_os_achievements', JSON.stringify(achievements));
-  }, [achievements]);
-  useEffect(() => {
-    localStorage.setItem('student_os_transactions', JSON.stringify(transactions));
-  }, [transactions]);
-  useEffect(() => {
-    localStorage.setItem('student_os_goals', JSON.stringify(goals));
-  }, [goals]);
-  useEffect(() => {
-    localStorage.setItem('student_os_calendarEvents', JSON.stringify(calendarEvents));
-  }, [calendarEvents]);
-  useEffect(() => {
-    localStorage.setItem('student_os_notes', JSON.stringify(notes));
-  }, [notes]);
-  useEffect(() => {
-    localStorage.setItem('student_os_notifications', JSON.stringify(notifications));
-  }, [notifications]);
+
 
   // Periodic Deadline Watcher (Simulates the custom deadline reminder scheduler)
   useEffect(() => {
@@ -587,9 +466,13 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
   const getAIRecommendation = async (feature: string, customPayload: any): Promise<string> => {
     setAiLoading(true);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authUser) {
+        headers['x-user-id'] = authUser.uid;
+      }
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ feature, payload: customPayload }),
       });
       if (!response.ok) {

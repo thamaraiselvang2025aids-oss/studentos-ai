@@ -24,9 +24,9 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [university, setUniversity] = useState('Stanford University');
-  const [major, setMajor] = useState('Computer Science');
-  const [graduationYear, setGraduationYear] = useState('2027');
+  const [university, setUniversity] = useState('');
+  const [major, setMajor] = useState('');
+  const [graduationYear, setGraduationYear] = useState(String(new Date().getFullYear() + 4));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +41,9 @@ export default function AuthScreen() {
         uid: authUser.uid,
         fullName: authUser.displayName,
         email: authUser.email,
-        university: 'Stanford University',
-        major: 'Computer Science',
-        graduationYear: 2027,
+        university: '',
+        major: '',
+        graduationYear: new Date().getFullYear() + 4,
         streakCount: 1,
         lastActive: new Date().toISOString()
       });
@@ -70,9 +70,9 @@ export default function AuthScreen() {
         uid: authUser.uid,
         fullName: authUser.displayName,
         email: authUser.email,
-        university: 'California Institute of Technology',
-        major: 'Software Engineering',
-        graduationYear: 2028,
+        university: '',
+        major: '',
+        graduationYear: new Date().getFullYear() + 4,
         streakCount: 1,
         lastActive: new Date().toISOString()
       });
@@ -116,8 +116,8 @@ export default function AuthScreen() {
         }
         const authUser = await firebaseAuth.signUpWithEmail(email, password, fullName);
         // Send verification email if supported
-        if (firebaseAuth.sendEmailVerification) {
-          await firebaseAuth.sendEmailVerification(authUser.uid);
+        if ((firebaseAuth as any).sendEmailVerification) {
+          await (firebaseAuth as any).sendEmailVerification(authUser.uid);
         }
         updateProfile({
           uid: authUser.uid,
@@ -204,10 +204,6 @@ export default function AuthScreen() {
           <h2 className="text-xl font-bold text-white tracking-tight font-sans mb-1 text-left">
             {isSignUp ? 'Create secure account' : 'Welcome back, Scholar'}
           </h2>
-          {/* Email hidden for privacy */}
-          <p className="text-xs text-gray-400 mt-1 font-sans">
-            ******@*****.com
-          </p>
           <p className="text-xs text-gray-400 mb-6 text-left">
             {isSignUp 
               ? 'Join the high-fidelity academic tracking ecosystem powered by Gemini AI' 
@@ -231,7 +227,7 @@ export default function AuthScreen() {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-start gap-2.5 text-left"
+              className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-200 text-emerald-350 text-xs flex items-start gap-2.5 text-left"
             >
               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
               <span>{success}</span>
@@ -286,7 +282,7 @@ export default function AuthScreen() {
                     <User className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
                     <input
                       type="text"
-                      placeholder="Alex Mercer"
+                      placeholder="e.g. Jane Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required={isSignUp}

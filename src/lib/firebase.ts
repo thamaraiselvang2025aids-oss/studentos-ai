@@ -7,30 +7,30 @@
  */
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { 
-  getAuth, 
-  Auth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  getAuth,
+  Auth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   updateProfile as updateAuthProfile,
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  GithubAuthProvider, 
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged as onFirebaseAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  Firestore, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
+import {
+  getFirestore,
+  Firestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
   deleteDoc
 } from 'firebase/firestore';
 
@@ -117,7 +117,7 @@ class FirebaseAuthService {
           };
           this.currentUser = authUser;
           localStorage.setItem('student_os_auth_session', JSON.stringify(authUser));
-          
+
           // Sync profile to firestore if database is ready
           if (db) {
             try {
@@ -137,11 +137,10 @@ class FirebaseAuthService {
           }
         } else {
           // Prevent real Firebase from logging out sandbox/fallback users on reload
-          const isFallback = this.currentUser && 
-            (this.currentUser.uid.startsWith('uid_') || 
-             this.currentUser.uid.startsWith('soc_') || 
-             this.currentUser.uid === 'guest_user_123');
-             
+          const isFallback = this.currentUser &&
+            (this.currentUser.uid.startsWith('uid_') ||
+              this.currentUser.uid.startsWith('soc_'));
+
           if (!isFallback) {
             this.currentUser = null;
             localStorage.removeItem('student_os_auth_session');
@@ -178,7 +177,7 @@ class FirebaseAuthService {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateAuthProfile(userCredential.user, { displayName: fullName });
-      
+
       const authUser: AuthUser = {
         uid: userCredential.user.uid,
         email: userCredential.user.email || email,
@@ -246,7 +245,7 @@ class FirebaseAuthService {
 
   async signInWithGoogle(): Promise<AuthUser> {
     if (this.isUsingFallback || !auth) {
-      return this.socialLoginFallback('google.com', 'Thamarai Selvan', 'tthamaraiselvan298@gmail.com');
+      return this.socialLoginFallback('google.com', 'Google Scholar', 'google.scholar@test.com');
     }
 
     try {
@@ -273,13 +272,13 @@ class FirebaseAuthService {
         throw new Error('Sign-in popup was blocked by your browser. Please enable popups.');
       }
       console.warn("Google Auth popup bypassed or blocked. Redirecting to Sandbox fallback user...", error);
-      return this.socialLoginFallback('google.com', 'Thamarai Selvan', 'tthamaraiselvan298@gmail.com');
+      return this.socialLoginFallback('google.com', 'Google Scholar', 'google.scholar@test.com');
     }
   }
 
   async signInWithGitHub(): Promise<AuthUser> {
     if (this.isUsingFallback || !auth) {
-      return this.socialLoginFallback('github.com', 'Selvan Github Dev', 'github.selvan@dev.net');
+      return this.socialLoginFallback('github.com', 'GitHub Scholar', 'github.scholar@test.com');
     }
 
     try {
@@ -306,7 +305,7 @@ class FirebaseAuthService {
         throw new Error('Sign-in popup was blocked by your browser. Please enable popups.');
       }
       console.warn("GitHub Auth popup bypassed or blocked. Redirecting to Sandbox fallback user...", error);
-      return this.socialLoginFallback('github.com', 'Selvan Github Dev', 'github.selvan@dev.net');
+      return this.socialLoginFallback('github.com', 'GitHub Scholar', 'github.scholar@test.com');
     }
   }
 
@@ -387,7 +386,7 @@ class FirebaseAuthService {
       uid: `soc_${providerId === 'google.com' ? 'google_192837' : 'github_884920'}`,
       email,
       displayName: name,
-      photoURL: providerId === 'google.com' 
+      photoURL: providerId === 'google.com'
         ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
         : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
       providerId,
@@ -403,15 +402,7 @@ class FirebaseAuthService {
   private getSimulatedUsers(): any[] {
     const raw = localStorage.getItem('student_os_user_creds');
     if (!raw) {
-      return [
-        {
-          uid: 'guest_user_123',
-          email: 'alex.mercer@university.edu',
-          password: 'password123',
-          displayName: 'Alex Mercer',
-          createdAt: new Date().toISOString()
-        }
-      ];
+      return [];
     }
     try {
       return JSON.parse(raw);

@@ -143,7 +143,7 @@ export default function Achievements() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 1st Place - TreeHacks 2026"
+                    placeholder="e.g. 1st Place Winner - AI Hackathon"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="bg-white border border-gray-300 rounded-lg p-2.5 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
@@ -155,7 +155,7 @@ export default function Achievements() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Stanford University / MLH"
+                    placeholder="e.g. University / MLH"
                     value={newOrg}
                     onChange={(e) => setNewOrg(e.target.value)}
                     className="bg-white border border-gray-300 rounded-lg p-2.5 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"

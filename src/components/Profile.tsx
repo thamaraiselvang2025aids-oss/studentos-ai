@@ -40,6 +40,14 @@ export default function Profile() {
   const [major, setMajor] = useState(profile.major);
   const [graduationYear, setGraduationYear] = useState(profile.graduationYear);
 
+  React.useEffect(() => {
+    setFullName(profile.fullName);
+    setEmail(profile.email);
+    setUniversity(profile.university || '');
+    setMajor(profile.major || '');
+    setGraduationYear(profile.graduationYear);
+  }, [profile]);
+
   // Status and AI assistance states
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [aiBioSuggestion, setAiBioSuggestion] = useState<string | null>(null);
@@ -129,6 +137,33 @@ export default function Profile() {
 
             <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div className="flex flex-col gap-1 text-left">
+                  <label className="text-[10px] font-bold font-mono text-gray-500 uppercase flex items-center gap-1">
+                    <User className="w-3 h-3 text-indigo-500" /> Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="bg-white border border-gray-300 rounded-lg p-2.5 text-xs text-gray-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="flex flex-col gap-1 text-left">
+                  <label className="text-[10px] font-bold font-mono text-gray-500 uppercase flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-indigo-500" /> Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-white border border-gray-300 rounded-lg p-2.5 text-xs text-gray-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -342,7 +342,7 @@ export default function Academic() {
                   <label className="block text-xs text-gray-500 font-bold uppercase font-mono mb-1.5">Instructor Name</label>
                   <input
                     type="text"
-                    placeholder="Prof. Cormen"
+                    placeholder="e.g. Dr. Smith"
                     value={instructor}
                     onChange={(e) => setInstructor(e.target.value)}
                     className="w-full bg-white text-sm text-gray-800 px-3 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all font-sans"

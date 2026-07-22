@@ -50,7 +50,7 @@ export default function Hackathons() {
         { id: `m2_${Date.now()}`, title: 'Build system skeleton, views, and server routes', completed: false },
         { id: `m3_${Date.now()}`, title: 'Polish aesthetics, compile client, and record video', completed: false }
       ],
-      status: 'register'
+      status: 'registered'
     });
     setHName('');
     setHDate('');
@@ -125,7 +125,7 @@ export default function Hackathons() {
                         </span>
                         {/* Deadline Countdown Logic */}
                         {(() => {
-                          if (hack.status === 'complete') return null;
+                          if (hack.status === 'won' || hack.status === 'ended') return null;
                           const hackDate = new Date(hack.date);
                           if (isNaN(hackDate.getTime())) return null; // Invalid date format
                           const diffTime = Math.ceil((hackDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
@@ -158,12 +158,14 @@ export default function Hackathons() {
                         <span className="text-[10px] text-gray-500 font-bold uppercase font-mono">Status:</span>
                         <select
                           value={hack.status}
-                          onChange={(e) => updateHackathon(hack.id, { status: e.target.value as 'register' | 'submit' | 'complete' })}
+                          onChange={(e) => updateHackathon(hack.id, { status: e.target.value as any })}
                           className="bg-gray-50 border border-gray-200 text-xs text-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
                         >
-                          <option value="register">Register</option>
-                          <option value="submit">Submit</option>
-                          <option value="complete">Complete</option>
+                          <option value="planning">Planning</option>
+                          <option value="registered">Registered</option>
+                          <option value="submitted">Submitted</option>
+                          <option value="won">Won</option>
+                          <option value="ended">Ended</option>
                         </select>
                       </div>
                     </div>

@@ -39,6 +39,12 @@ if (isRealApiKey) {
 // ----------------- AI ROUTE ENDPOINTS -----------------
 
 app.post("/api/ai/generate", async (req: express.Request, res: express.Response) => {
+  const authUserId = req.headers["x-user-id"];
+  if (!authUserId) {
+    res.status(403).json({ error: "Unauthorized access: Missing authentication context." });
+    return;
+  }
+
   const { feature, payload } = req.body;
 
   if (!feature) {
@@ -333,21 +339,21 @@ Ensure your resume includes these crucial keywords:
 Tailored professional branding suggestions engineered for **${payload.fullName || "Student"}**:
 
 #### 1. ATS-Friendly Resume Summary Statement
-> Goal-driven **${payload.major || "Computer Science"}** undergraduate at **${payload.university || "Stanford University"}** (Graduating ${payload.graduationYear || 2027}) with proven foundational expertise in course-aligned workflows and practical project execution. Active technical contributor with **${payload.totalProjects || 1} core development repositories** and synced algorithmic tracking profiles. Eager to leverage disciplined analytical problem-solving and software engineering principles in a high-impact professional environment.
+> Goal-driven **${payload.major || "Selected Major"}** undergraduate at **${payload.university || "University"}** (Graduating ${payload.graduationYear || new Date().getFullYear() + 4}) with proven foundational expertise in course-aligned workflows and practical project execution. Active technical contributor with **${payload.totalProjects || 1} core development repositories** and synced algorithmic tracking profiles. Eager to leverage disciplined analytical problem-solving and software engineering principles in a high-impact professional environment.
 
 #### 2. LinkedIn "About" Introduction Pitch
-> "Hey! I'm ${payload.fullName || "Alex Mercer"}, a passionate **${payload.major || "Computer Science"}** student at **${payload.university || "Stanford University"}** dedicated to engineering reliable digital solutions. 🚀 
+> "Hey! I'm ${payload.fullName || "Student"}, a passionate **${payload.major || "Selected Major"}** student at **${payload.university || "University"}** dedicated to engineering reliable digital solutions. 🚀 
 > 
 > My academic journey consists of **${payload.totalCourses || 3} core engineering modules**, which I balance alongside hands-on development—currently maintaining active repositories in my codebase portfolios. Whether optimizing relational database indices or writing clean algorithms, I thrive on translating abstract theoretical structures into modular, production-ready code. 
 > 
 > Let's connect! Always open to speaking about student engineering roles, open source development, or system-design challenges."
 
 #### 3. Casual 20-Second Elevator Pitch
-> *"Hi, I'm ${payload.fullName || "Alex Mercer"}. I study **${payload.major || "Computer Science"}** at **${payload.university || "Stanford University"}**, graduating in ${payload.graduationYear || 2027}. I love building neat developer tools, and I've already designed **${payload.totalProjects || 1} custom web applications** using modern tech stacks. Right now, I'm preparing for upcoming software internships by optimizing algorithms and honing my systems understanding. I'd love to learn more about engineering roles at your company!"*`;
+> *"Hi, I'm ${payload.fullName || "Student"}. I study **${payload.major || "Selected Major"}** at **${payload.university || "University"}**, graduating in ${payload.graduationYear || new Date().getFullYear() + 4}. I love building neat developer tools, and I've already designed **${payload.totalProjects || 1} custom web applications** using modern tech stacks. Right now, I'm preparing for upcoming software internships by optimizing algorithms and honing my systems understanding. I'd love to learn more about engineering roles at your company!"*`;
   } else if (feature === "achievement_recommender") {
     simulatedOutput = `### 🏆 Recommended Certifications & Achievements
 
-Recommended achievements specifically curated for **${payload.major || "Computer Science"}** at **${payload.university || "Stanford University"}**:
+Recommended achievements specifically curated for **${payload.major || "Selected Major"}** at **${payload.university || "University"}**:
 
 1. **AWS Certified Developer - Associate**
    - **Issuer**: Amazon Web Services (AWS)
@@ -360,7 +366,7 @@ Recommended achievements specifically curated for **${payload.major || "Computer
    - **Value**: Establishes your mastery of Scrum framework and Agile methodologies. Strongly differentiates candidates for software developer, product management, or technical program management roles.
 
 3. **Dean's List / Academic Excellence Honors**
-   - **Issuer**: ${payload.university || "Stanford University"}
+   - **Issuer**: ${payload.university || "University"}
    - **Category**: academic
    - **Value**: Showcases your academic consistency and high-gpa standing directly to recruiters checking academic rigor.
 
