@@ -31,6 +31,19 @@ export default function Certificates() {
   const [newDate, setNewDate] = useState('');
   const [newCategory, setNewCategory] = useState<'academic' | 'technical' | 'soft_skills' | 'extracurricular'>('technical');
   const [newUrl, setNewUrl] = useState('');
+  const [fileData, setFileData] = useState<string | undefined>(undefined);
+  const [fileName, setFileName] = useState<string | undefined>(undefined);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFileData(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Filtering State
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'academic' | 'technical' | 'soft_skills' | 'extracurricular'>('all');
@@ -48,7 +61,9 @@ export default function Certificates() {
       issuer: newIssuer.trim(),
       issueDate: newDate,
       category: newCategory,
-      credentialUrl: newUrl.trim() || undefined
+      credentialUrl: newUrl.trim() || undefined,
+      fileData,
+      fileName
     });
 
     // Reset Form
@@ -57,6 +72,8 @@ export default function Certificates() {
     setNewDate('');
     setNewCategory('technical');
     setNewUrl('');
+    setFileData(undefined);
+    setFileName(undefined);
     setShowAddForm(false);
   };
 
@@ -200,6 +217,23 @@ export default function Certificates() {
                 </div>
               </div>
 
+              <div className="flex flex-col gap-1 text-left sm:col-span-3">
+                <label className="text-[10px] font-bold font-mono text-gray-500 uppercase">Upload Certificate File (Image/PDF)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+                  />
+                  {fileName && (
+                    <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded shrink-0">
+                      ✓ {fileName}
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2.5 border-t border-gray-100 pt-3">
                 <button
                   type="submit"
@@ -258,22 +292,35 @@ export default function Certificates() {
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs font-mono text-gray-400">
+                  <div className="mt-5 pt-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-gray-400">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
                       {cert.issueDate}
                     </span>
 
-                    {cert.credentialUrl && (
-                      <a
-                        href={cert.credentialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-bold uppercase tracking-wider text-[10px] bg-indigo-50 px-2 py-1 rounded"
-                      >
-                        Verify Credential <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {cert.fileData && (
+                        <a
+                          href={cert.fileData}
+                          download={cert.fileName || 'certificate'}
+                          title={`Download ${cert.fileName || 'certificate file'}`}
+                          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-bold uppercase tracking-wider text-[10px] bg-emerald-50 px-2 py-1 rounded"
+                        >
+                          View File <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+
+                      {cert.credentialUrl && (
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-bold uppercase tracking-wider text-[10px] bg-indigo-50 px-2 py-1 rounded"
+                        >
+                          Verify <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

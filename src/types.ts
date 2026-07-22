@@ -93,6 +93,8 @@ export interface Certificate {
   issueDate: string;
   credentialUrl?: string;
   category: 'academic' | 'technical' | 'soft_skills' | 'extracurricular';
+  fileData?: string;
+  fileName?: string;
 }
 
 export interface Achievement {
