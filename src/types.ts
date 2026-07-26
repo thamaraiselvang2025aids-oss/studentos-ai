@@ -33,6 +33,11 @@ export interface Hackathon {
   id: string;
   name: string;
   date: string;
+  startDate?: string;
+  endDate?: string;
+  duration?: string;
+  submissionDeadline?: string;
+  standing?: 'participation' | 'winner' | 'runner_up' | 'none';
   teamSize: number;
   rolesRequired: string[];
   ideas: string[];
@@ -40,6 +45,8 @@ export interface Hackathon {
   status: 'planning' | 'registered' | 'submitted' | 'won' | 'ended';
   notes?: string;
 }
+
+
 
 export interface CodingProfile {
   id: string;
@@ -81,8 +88,11 @@ export interface ResearchPaper {
   abstract?: string;
   authors: string;
   journal?: string;
-  status: 'writing' | 'reviewing' | 'accepted' | 'published';
+  status: 'idea' | 'writing' | 'submitted' | 'published';
   docLink?: string;
+  doi?: string;
+  publishLink?: string;
+  certificate?: string;
   notes?: string;
 }
 

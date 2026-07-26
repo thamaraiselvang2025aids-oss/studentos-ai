@@ -7,7 +7,8 @@ import {
   Bookmark,
   Layers,
   Sparkles,
-  Info
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { ResearchPaper } from '../types';
 
@@ -17,12 +18,14 @@ export default function Research() {
     addResearchPaper,
     deleteResearchPaper
   } = useStudentOS();
-
   // Research states
   const [rTitle, setRTitle] = useState('');
   const [rAuthors, setRAuthors] = useState('');
   const [rJournal, setRJournal] = useState('');
   const [rStatus, setRStatus] = useState<ResearchPaper['status']>('writing');
+  const [rDoi, setRDoi] = useState('');
+  const [rPublishLink, setRPublishLink] = useState('');
+  const [rCertificate, setRCertificate] = useState('');
 
   const handleCreateResearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,14 +35,19 @@ export default function Research() {
       authors: rAuthors,
       journal: rJournal,
       status: rStatus,
+      doi: rDoi,
+      publishLink: rPublishLink,
+      certificate: rCertificate,
       notes: ''
     });
     setRTitle('');
     setRAuthors('');
     setRJournal('');
     setRStatus('writing');
+    setRDoi('');
+    setRPublishLink('');
+    setRCertificate('');
   };
-
   return (
     <div id="research_view" className="flex-1 overflow-y-auto bg-gray-50 p-6 text-gray-800 scroll-smooth">
       {/* Header */}
@@ -86,6 +94,29 @@ export default function Research() {
                           <h4 className="text-xs font-bold text-gray-950 leading-relaxed font-sans">{paper.title}</h4>
                           <p className="text-[10px] text-gray-500 mt-1.5 font-sans">Authors: {paper.authors || 'Self'}</p>
                           <p className="text-[10px] text-gray-600 mt-1 font-mono font-medium">{paper.journal || 'Target: Unspecified Venue'}</p>
+                          
+                          {paper.doi && (
+                            <p className="text-[10px] text-gray-500 mt-1 font-mono">
+                              DOI: <span className="font-semibold text-gray-700">{paper.doi}</span>
+                            </p>
+                          )}
+                          {paper.publishLink && (
+                            <div className="mt-1">
+                              <a
+                                href={paper.publishLink.startsWith('http') ? paper.publishLink : `https://${paper.publishLink}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] text-purple-600 hover:text-purple-700 font-semibold transition-all"
+                              >
+                                Published Link <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                          {paper.certificate && (
+                            <p className="text-[10px] text-gray-500 mt-1 font-sans">
+                              📜 Certificate: <span className="text-gray-700 font-medium">{paper.certificate}</span>
+                            </p>
+                          )}
                         </div>
                         <button
                           onClick={() => deleteResearchPaper(paper.id)}
@@ -163,8 +194,41 @@ export default function Research() {
                   <option value="idea">Idea Stage</option>
                   <option value="writing">Writing & Draft</option>
                   <option value="submitted">Submitted</option>
-                  <option value="published">Published & Completed</option>
+                  <option value="published">Published</option>
                 </select>
+              </div>
+
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-gray-500 font-bold font-mono uppercase">DOI Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 10.1145/3318464.3389700"
+                  value={rDoi}
+                  onChange={(e) => setRDoi(e.target.value)}
+                  className="bg-white text-xs text-gray-800 p-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-gray-500 font-bold font-mono uppercase">Paper Published Link</label>
+                <input
+                  type="text"
+                  placeholder="e.g. https://dl.acm.org/..."
+                  value={rPublishLink}
+                  onChange={(e) => setRPublishLink(e.target.value)}
+                  className="bg-white text-xs text-gray-800 p-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[10px] text-gray-500 font-bold font-mono uppercase">Publication Certificate (e.g. name/URL)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Certificate of Acceptance"
+                  value={rCertificate}
+                  onChange={(e) => setRCertificate(e.target.value)}
+                  className="bg-white text-xs text-gray-800 p-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500 font-sans"
+                />
               </div>
 
               <button

@@ -207,12 +207,12 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
     setCustomCategories(prev => ({ ...prev, [key]: label }));
   };
 
-
-
   // Periodic Deadline Watcher (Simulates the custom deadline reminder scheduler)
   useEffect(() => {
     const checkDeadlines = () => {
       const now = Date.now();
+      
+      // 1. Assignments
       assignments.forEach((assignment) => {
         if (assignment.status === 'completed') return;
 
@@ -220,35 +220,95 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
         const diffMs = dueTime - now;
         const diffHrs = diffMs / (1000 * 60 * 60);
 
-        // Notify 3 days before
         if (diffHrs > 70 && diffHrs < 73) {
-          triggerDeadlineNotification(assignment, '3 days remaining');
+          triggerDeadlineNotification(assignment.title, `Assignment is due in 3 days.`, 'deadline');
         }
-        // Notify 1 day before
         else if (diffHrs > 22 && diffHrs < 25) {
-          triggerDeadlineNotification(assignment, '1 day remaining (CRITICAL)');
+          triggerDeadlineNotification(assignment.title, `Assignment is due tomorrow (CRITICAL).`, 'deadline');
         }
-        // Notify 2 hours before
         else if (diffHrs > 1.8 && diffHrs < 2.2) {
-          triggerDeadlineNotification(assignment, '2 hours left - submit now!');
+          triggerDeadlineNotification(assignment.title, `Assignment is due in 2 hours - submit now!`, 'warning');
+        }
+      });
+
+      // 2. Hackathons
+      hackathons.forEach((hack) => {
+        if (hack.status === 'ended' || hack.status === 'won' || hack.status === 'submitted') return;
+
+        // Check Hackathon Start Date (fallback to date if startDate not specified)
+        const targetStart = hack.startDate || hack.date;
+        if (targetStart) {
+          const startTime = new Date(targetStart).getTime();
+          const startDiffMs = startTime - now;
+          const startDiffHrs = startDiffMs / (1000 * 60 * 60);
+
+          if (startDiffHrs > 70 && startDiffHrs < 73) {
+            triggerDeadlineNotification(hack.name, `Hackathon starts in 3 days. Ready to code?`, 'info');
+          }
+          else if (startDiffHrs > 22 && startDiffHrs < 25) {
+            triggerDeadlineNotification(hack.name, `Hackathon starts tomorrow (CRITICAL reminder).`, 'warning');
+          }
+          else if (startDiffHrs > 1.8 && startDiffHrs < 2.2) {
+            triggerDeadlineNotification(hack.name, `Hackathon starts in 2 hours - get ready!`, 'warning');
+          }
+        }
+
+        // Check Hackathon Submission Deadline
+        if (hack.submissionDeadline) {
+          const deadlineTime = new Date(hack.submissionDeadline).getTime();
+          const deadlineDiffMs = deadlineTime - now;
+          const deadlineDiffHrs = deadlineDiffMs / (1000 * 60 * 60);
+
+          if (deadlineDiffHrs > 22 && deadlineDiffHrs < 25) {
+            triggerDeadlineNotification(`${hack.name} Submission`, `Project submission is due tomorrow!`, 'warning');
+          }
+          else if (deadlineDiffHrs > 1.8 && deadlineDiffHrs < 2.2) {
+            triggerDeadlineNotification(`${hack.name} Submission`, `Project submission is due in 2 hours - submit now!`, 'warning');
+          }
+        }
+      });
+      // 3. Internship applications
+      applications.forEach((app) => {
+        if (app.status === 'rejected' || app.status === 'offer' || !app.nextDeadline) return;
+
+        const dueTime = new Date(app.nextDeadline).getTime();
+        const diffMs = dueTime - now;
+        const diffHrs = diffMs / (1000 * 60 * 60);
+
+        if (diffHrs > 22 && diffHrs < 25) {
+          triggerDeadlineNotification(`${app.company} (${app.role})`, `Application or online test deadline is tomorrow.`, 'warning');
+        }
+      });
+
+      // 4. Goals
+      goals.forEach((goal) => {
+        if (goal.completed || !goal.targetDate) return;
+
+        const dueTime = new Date(goal.targetDate).getTime();
+        const diffMs = dueTime - now;
+        const diffHrs = diffMs / (1000 * 60 * 60);
+
+        if (diffHrs > 22 && diffHrs < 25) {
+          triggerDeadlineNotification(goal.title, `Goal target date is tomorrow. Don't forget to update your progress!`, 'info');
         }
       });
     };
 
-    const interval = setInterval(checkDeadlines, 60000 * 10); // Check every 10 min
+    const interval = setInterval(checkDeadlines, 60000 * 5); // Check every 5 min
+    checkDeadlines(); // Run once immediately on mount
     return () => clearInterval(interval);
-  }, [assignments]);
+  }, [assignments, hackathons, applications, goals]);
 
-  const triggerDeadlineNotification = (assignment: Assignment, contextStr: string) => {
+  const triggerDeadlineNotification = (title: string, message: string, type: 'info' | 'warning' | 'success' | 'deadline') => {
     const exists = notifications.some(
-      (n) => n.title.includes(assignment.title) && n.message.includes(contextStr)
+      (n) => n.title.includes(title) && n.message.includes(message)
     );
     if (!exists) {
       addNotification({
-        title: `🚨 Deadline Warning: ${assignment.title}`,
-        message: `Task is due soon. Status: ${contextStr}. Complete current action points immediately.`,
+        title: `🚨 Reminder: ${title}`,
+        message,
         read: false,
-        type: 'deadline',
+        type,
         timestamp: new Date().toISOString()
       });
     }

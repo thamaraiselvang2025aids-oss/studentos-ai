@@ -191,7 +191,7 @@ class FirebaseAuthService {
       this.notify();
       return authUser;
     } catch (error: any) {
-      if (error.code && error.code.startsWith('auth/')) {
+      if (error.code === 'auth/email-already-in-use' || error.code === 'auth/weak-password' || error.code === 'auth/invalid-email') {
         let cleanMessage = error.message;
         if (error.code === 'auth/email-already-in-use') cleanMessage = 'This email address is already registered.';
         if (error.code === 'auth/weak-password') cleanMessage = 'Password is too weak. Please use at least 6 characters.';
@@ -227,7 +227,7 @@ class FirebaseAuthService {
       this.notify();
       return authUser;
     } catch (error: any) {
-      if (error.code && error.code.startsWith('auth/')) {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
         let cleanMessage = error.message;
         if (error.code === 'auth/wrong-password') cleanMessage = 'Incorrect password. Please verify and try again.';
         if (error.code === 'auth/user-not-found') cleanMessage = 'No registered student account was found with this email.';

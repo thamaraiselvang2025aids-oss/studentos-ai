@@ -78,21 +78,33 @@ export default function Labs() {
     setSandboxRunning(true);
     setSandboxOutput(['[Compiling & Executing on Remote Server...]']);
     try {
-      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+      const res = await fetch('https://wandbox.org/api/compile.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          language: "cpp",
-          version: "10.2.0",
-          files: [{ content: sandboxCode }]
+          compiler: "gcc-head",
+          code: sandboxCode
         })
       });
       const data = await res.json();
       
-      if (data.run && data.run.output) {
-        const outputLines = data.run.output.split('\\n');
+      if (data.program_output !== undefined || data.program_error !== undefined || data.compiler_message) {
+        const outputLines: string[] = [];
+        if (data.compiler_message) {
+          outputLines.push(...data.compiler_message.split('\n'));
+        }
+        if (data.program_output) {
+          outputLines.push(...data.program_output.split('\n'));
+        }
+        if (data.program_error) {
+          outputLines.push(...data.program_error.split('\n'));
+        }
+        if (outputLines.length === 0 && data.status === '0') {
+          outputLines.push('(Clean exit with no output)');
+        }
+        
         setSandboxOutput([
-          `[Execution Success - ${new Date().toLocaleTimeString()}]`,
+          data.status === '0' ? `[Execution Success - ${new Date().toLocaleTimeString()}]` : `[Execution Finished - ${new Date().toLocaleTimeString()}]`,
           ...outputLines,
           '-- Execution Finished --'
         ]);
