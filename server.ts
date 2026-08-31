@@ -696,9 +696,25 @@ Hello! I am your AI Academic Advisor. How can I assist you with your academic go
 - Share a resume bullet point to run a **Resume Critique**.
 - Let me map out a **Placement Prep Roadmap** for you!`;
   }
-
+  
   res.json({ result: simulatedOutput, simulated: true });
 });
+
+app.post("/api/compile", async (req: express.Request, res: express.Response) => {
+  try {
+    const response = await fetch('https://wandbox.org/api/compile.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Compile proxy error:", error);
+    res.status(500).json({ error: 'Compilation failed' });
+  }
+});
+
 
 // ----------------- VITE AND ASSETS HOSTING -----------------
 

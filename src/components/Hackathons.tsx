@@ -377,7 +377,7 @@ export default function Hackathons() {
 
       {/* AI Brainstorming Modal */}
       {aiHack && (
-        <div className="fixed inset-0 bg-[#000]/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative border border-gray-100 flex flex-col gap-4 text-left animate-scale-in">
             <button
               onClick={() => {

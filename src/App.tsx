@@ -75,7 +75,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex w-screen h-screen bg-[#08090c] overflow-hidden select-none relative">
+    <div className="flex w-screen h-screen bg-[var(--bg-primary)] overflow-hidden select-none relative theme-transition">
       {/* Sidebar navigation */}
       <div className={`${isSidebarOpen ? 'fixed inset-y-0 left-0 z-40 block' : 'hidden'} md:block md:relative`}>
         <Sidebar onOpenNotifications={() => setShowNotifications(true)} onCloseSidebar={() => setIsSidebarOpen(false)} />
@@ -88,14 +88,14 @@ function AppContent() {
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col relative h-full min-w-0">
         {/* Mobile Header Bar */}
-        <div className="md:hidden flex items-center justify-between bg-[#141417] p-4 border-b border-[#27272A] shrink-0">
+        <div className="md:hidden flex items-center justify-between bg-[var(--bg-card)] p-4 border-b border-[var(--border-primary)] shrink-0 theme-transition">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded bg-indigo-600 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
-            <span className="text-white font-bold font-mono tracking-wider text-sm">STUDENT-OS</span>
+            <span className="text-[var(--text-primary)] font-bold font-mono tracking-wider text-sm">STUDENT-OS</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(true)} className="text-gray-300 hover:text-white cursor-pointer p-1">
+          <button onClick={() => setIsSidebarOpen(true)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer p-1">
             <Menu className="w-6 h-6" />
           </button>
         </div>
@@ -105,19 +105,19 @@ function AppContent() {
 
       {/* Floating Notifications Drawer overlay (glassmorphic slideout) */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-sm flex justify-end">
-          <div className="w-96 h-full bg-[#0d0e12]/95 border-l border-white/5 backdrop-blur-2xl p-6 shadow-2xl flex flex-col justify-between animate-slide-in relative">
+        <div className="fixed inset-0 z-50 bg-[var(--overlay-bg)] backdrop-blur-sm flex justify-end">
+          <div className="w-96 h-full bg-[var(--glass-bg-heavy)] border-l border-[var(--border-subtle)] backdrop-blur-2xl p-6 shadow-2xl flex flex-col justify-between animate-slide-in relative">
             <button
               onClick={() => setShowNotifications(false)}
-              className="absolute top-5 right-5 text-gray-500 hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-[var(--text-dimmed)] hover:text-[var(--text-primary)] cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Logs List */}
             <div className="flex-1 flex flex-col gap-5 overflow-y-auto pr-1">
-              <div className="flex items-center justify-between border-b border-white/5 pb-4 mt-2">
-                <h3 className="text-md font-bold text-white flex items-center gap-1.5 font-sans">
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4 mt-2">
+                <h3 className="text-md font-bold text-[var(--text-primary)] flex items-center gap-1.5 font-sans">
                   <Bell className="w-5 h-5 text-purple-400" /> Notifications Board
                 </h3>
                 {notifications.length > 0 && (
@@ -139,7 +139,7 @@ function AppContent() {
                         key={n.id}
                         className={`p-4 rounded-xl border relative transition-all ${
                           n.read
-                            ? 'bg-white/[0.01] border-white/5 opacity-60'
+                            ? 'bg-[var(--border-subtle)] border-[var(--border-subtle)] opacity-60'
                             : isWarning
                             ? 'bg-rose-500/5 border-rose-500/20'
                             : 'bg-purple-500/5 border-purple-500/20'
@@ -153,9 +153,9 @@ function AppContent() {
                           )}
 
                           <div>
-                            <h4 className="text-xs font-bold text-white leading-tight">{n.title}</h4>
-                            <p className="text-[11px] text-gray-400 mt-1 leading-snug font-sans">{n.message}</p>
-                            <span className="text-[8px] text-gray-500 font-mono block mt-2 uppercase">
+                            <h4 className="text-xs font-bold text-[var(--text-primary)] leading-tight">{n.title}</h4>
+                            <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-snug font-sans">{n.message}</p>
+                            <span className="text-[8px] text-[var(--text-dimmed)] font-mono block mt-2 uppercase">
                               {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -164,7 +164,7 @@ function AppContent() {
                         {!n.read && (
                           <button
                             onClick={() => markNotificationRead(n.id)}
-                            className="absolute top-4 right-4 text-gray-500 hover:text-white p-1 rounded-lg"
+                            className="absolute top-4 right-4 text-[var(--text-dimmed)] hover:text-[var(--text-primary)] p-1 rounded-lg"
                             title="Mark as Read"
                           >
                             <Check className="w-3.5 h-3.5" />
@@ -174,8 +174,8 @@ function AppContent() {
                     );
                   })
                 ) : (
-                  <div className="py-12 text-center text-gray-500 text-sm font-sans flex flex-col items-center gap-2">
-                    <CheckCircle className="w-8 h-8 text-gray-600" />
+                  <div className="py-12 text-center text-[var(--text-dimmed)] text-sm font-sans flex flex-col items-center gap-2">
+                    <CheckCircle className="w-8 h-8 text-[var(--text-faint)]" />
                     All logs clear. Outstanding notifications list is empty!
                   </div>
                 )}
@@ -183,8 +183,8 @@ function AppContent() {
             </div>
 
             {/* Footer notice */}
-            <div className="border-t border-white/5 pt-4 text-center">
-              <p className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">StudentOS AI Security hardened Ruleset</p>
+            <div className="border-t border-[var(--border-subtle)] pt-4 text-center">
+              <p className="text-[10px] text-[var(--text-dimmed)] font-mono uppercase tracking-wider">StudentOS AI Security hardened Ruleset</p>
             </div>
           </div>
         </div>

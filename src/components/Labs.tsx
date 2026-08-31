@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStudentOS } from '../context/StudentOSContext';
 import {
   Terminal as TerminalIcon,
@@ -43,6 +43,260 @@ export default function Labs() {
     'Ready for sandbox code execution.'
   ]);
   const [sandboxRunning, setSandboxRunning] = useState(false);
+  const [sandboxLanguage, setSandboxLanguage] = useState<'cpp' | 'java' | 'python'>('cpp');
+  // Pyodide in-browser Python engine
+  const [pyodideReady, setPyodideReady] = useState(false);
+  const [pyodideLoading, setPyodideLoading] = useState(false);
+  const pyodideRef = useRef<any>(null);
+  const [sandboxImages, setSandboxImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (sandboxLanguage === 'python' && !pyodideRef.current && !pyodideLoading) {
+      initPyodide();
+    }
+  }, [sandboxLanguage]);
+
+  const initPyodide = async () => {
+    setPyodideLoading(true);
+    setSandboxOutput([
+      '[Initializing Python 3.12 via Pyodide WebAssembly...]',
+      '[Installing: numpy, matplotlib, pandas, seaborn, scipy, scikit-learn]',
+      'First load may take ~20 seconds. Packages are cached after that.',
+    ]);
+    try {
+      if (!(window as any).loadPyodide) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const pyodide = await (window as any).loadPyodide({
+        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/',
+      });
+      await pyodide.loadPackage(['numpy', 'matplotlib', 'pandas', 'scipy', 'scikit-learn', 'micropip']);
+      await pyodide.runPythonAsync(`
+import micropip
+await micropip.install('seaborn')
+`);
+      pyodideRef.current = pyodide;
+      setPyodideReady(true);
+      setSandboxOutput([
+        '[Python 3.12 Environment Ready!]',
+        '  numpy  matplotlib  pandas  seaborn  scipy  scikit-learn',
+        '  math  os  sys  json  re  collections  itertools  functools',
+        '> Write Python and click Run Python.',
+      ]);
+    } catch (err: any) {
+      setSandboxOutput(['[Failed to load Python environment]', err.message]);
+    } finally {
+      setPyodideLoading(false);
+    }
+  };
+
+  const handleRunPython = async () => {
+    const pyodide = pyodideRef.current;
+    if (!pyodide) { setSandboxOutput(['Python environment not ready yet...']); return; }
+    setSandboxRunning(true);
+    setSandboxImages([]);
+    setSandboxOutput(['[Executing Python...]']);
+    const wrapper = `
+import sys, io, base64, json, traceback as _tb
+_out = io.StringIO()
+_err = io.StringIO()
+sys.stdout = _out
+sys.stderr = _err
+try:
+    import matplotlib; matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    plt.close('all')
+except: pass
+_ok = True
+try:
+    exec(compile(${JSON.stringify(sandboxCode)}, '<code>', 'exec'), {})
+except Exception as _e:
+    _ok = False
+    print(_tb.format_exc(), file=_err)
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+_imgs = []
+try:
+    import matplotlib.pyplot as plt
+    for _n in plt.get_fignums():
+        _f = plt.figure(_n)
+        _b = io.BytesIO()
+        _f.savefig(_b, format='png', bbox_inches='tight', dpi=130)
+        _b.seek(0)
+        _imgs.append(base64.b64encode(_b.read()).decode())
+    plt.close('all')
+except: pass
+json.dumps({'ok': _ok, 'stdout': _out.getvalue(), 'stderr': _err.getvalue(), 'images': _imgs})
+`;
+    try {
+      const rj: string = await pyodide.runPythonAsync(wrapper);
+      const r = JSON.parse(rj);
+      const lines: string[] = [
+        r.ok ? `[Execution Success - ${new Date().toLocaleTimeString()}]` : `[Runtime Error - ${new Date().toLocaleTimeString()}]`,
+      ];
+      if (r.stdout) lines.push(...r.stdout.split('\n').filter((l: string) => l !== ''));
+      if (r.stderr) lines.push(...r.stderr.split('\n').filter((l: string) => l !== ''));
+      if (r.images.length > 0) lines.push(`[${r.images.length} visualization(s) rendered below]`);
+      if (!r.stdout && !r.stderr && r.ok) lines.push('(Clean exit - no output)');
+      lines.push('-- Execution Finished --');
+      setSandboxOutput(lines);
+      setSandboxImages(r.images);
+    } catch (err: any) {
+      setSandboxOutput([`[Pyodide Error - ${new Date().toLocaleTimeString()}]`, err.message, '-- Execution Interrupted --']);
+    } finally {
+      setSandboxRunning(false);
+    }
+  };
+
+  // Returns full Wandbox compile options for each language.
+  // This ensures all standard library modules and packages are available.
+  const getCompilerConfig = (lang: string): Record<string, string> => {
+    switch (lang) {
+      case 'java':
+        return {
+          compiler: 'openjdk-jdk-22+36',
+          // Enable all preview features + full JDK modules
+          compiler_option_raw: '--enable-preview --release 22',
+        };
+      case 'python':
+        return {
+          compiler: 'cpython-3.12.7',
+          // -u: unbuffered I/O so print() output appears immediately
+          // Site packages (numpy, scipy, requests etc.) are pre-installed on Wandbox
+          runtime_option_raw: '-u',
+        };
+      case 'cpp':
+      default:
+        return {
+          compiler: 'gcc-head',
+          // C++23 standard + full STL + linker flags for math/threads
+          compiler_option_raw: '-std=c++23 -O2 -Wall -lm -lpthread',
+        };
+    }
+  };
+
+  // Auto-close pairs map
+  const autoPairs: Record<string, string> = {
+    '{': '}',
+    '(': ')',
+    '[': ']',
+    '"': '"',
+    "'": "'",
+  };
+  const closingChars = new Set(Object.values(autoPairs));
+
+  // Handle Tab, Enter, and auto-close brackets/quotes
+  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const { selectionStart, selectionEnd, value } = textarea;
+    const indent = '    '; // 4 spaces
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const newValue = value.substring(0, selectionStart) + indent + value.substring(selectionEnd);
+      setSandboxCode(newValue);
+      requestAnimationFrame(() => {
+        textarea.selectionStart = selectionStart + indent.length;
+        textarea.selectionEnd = selectionStart + indent.length;
+      });
+
+    } else if (e.key === 'Enter') {
+      const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+      const currentLine = value.substring(lineStart, selectionStart);
+      const currentIndent = currentLine.match(/^(\s*)/)?.[1] || '';
+      const trimmed = currentLine.trimEnd();
+
+      // Smart Enter inside {} — add inner line + closing brace on next line
+      const charBefore = value[selectionStart - 1];
+      const charAfter = value[selectionEnd];
+      if (charBefore === '{' && charAfter === '}') {
+        e.preventDefault();
+        const inner = '\n' + currentIndent + indent;
+        const outer = '\n' + currentIndent;
+        const newValue = value.substring(0, selectionStart) + inner + outer + value.substring(selectionEnd);
+        setSandboxCode(newValue);
+        requestAnimationFrame(() => {
+          const pos = selectionStart + inner.length;
+          textarea.selectionStart = pos;
+          textarea.selectionEnd = pos;
+        });
+        return;
+      }
+
+      const addExtra = trimmed.endsWith(':') || trimmed.endsWith('{');
+      e.preventDefault();
+      const newIndent = '\n' + currentIndent + (addExtra ? indent : '');
+      const newValue = value.substring(0, selectionStart) + newIndent + value.substring(selectionEnd);
+      setSandboxCode(newValue);
+      requestAnimationFrame(() => {
+        const pos = selectionStart + newIndent.length;
+        textarea.selectionStart = pos;
+        textarea.selectionEnd = pos;
+      });
+
+    } else if (autoPairs[e.key]) {
+      // Auto-close bracket/quote
+      const closing = autoPairs[e.key];
+      const hasSelection = selectionStart !== selectionEnd;
+
+      // For quotes, skip if next char is same (avoid double-quoting)
+      if ((e.key === '"' || e.key === "'") && !hasSelection && value[selectionStart] === e.key) {
+        e.preventDefault();
+        requestAnimationFrame(() => {
+          textarea.selectionStart = selectionStart + 1;
+          textarea.selectionEnd = selectionStart + 1;
+        });
+        return;
+      }
+
+      e.preventDefault();
+      if (hasSelection) {
+        // Wrap selected text with pair
+        const selected = value.substring(selectionStart, selectionEnd);
+        const newValue = value.substring(0, selectionStart) + e.key + selected + closing + value.substring(selectionEnd);
+        setSandboxCode(newValue);
+        requestAnimationFrame(() => {
+          textarea.selectionStart = selectionStart + 1;
+          textarea.selectionEnd = selectionEnd + 1;
+        });
+      } else {
+        const newValue = value.substring(0, selectionStart) + e.key + closing + value.substring(selectionEnd);
+        setSandboxCode(newValue);
+        requestAnimationFrame(() => {
+          textarea.selectionStart = selectionStart + 1;
+          textarea.selectionEnd = selectionStart + 1;
+        });
+      }
+
+    } else if (e.key === 'Backspace' && selectionStart === selectionEnd) {
+      // Remove both chars if deleting the opening of a pair
+      const charBefore = value[selectionStart - 1];
+      const charAfter = value[selectionStart];
+      if (charBefore && autoPairs[charBefore] === charAfter) {
+        e.preventDefault();
+        const newValue = value.substring(0, selectionStart - 1) + value.substring(selectionEnd + 1);
+        setSandboxCode(newValue);
+        requestAnimationFrame(() => {
+          textarea.selectionStart = selectionStart - 1;
+          textarea.selectionEnd = selectionStart - 1;
+        });
+      }
+
+    } else if (closingChars.has(e.key) && value[selectionStart] === e.key) {
+      // Skip over an already-present closing char
+      e.preventDefault();
+      requestAnimationFrame(() => {
+        textarea.selectionStart = selectionStart + 1;
+        textarea.selectionEnd = selectionStart + 1;
+      });
+    }
+  };
 
   const handleCreateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,15 +329,32 @@ export default function Labs() {
   };
 
   const handleRunSandbox = async () => {
+    // Python uses Pyodide (in-browser WebAssembly) for full visualization support
+    if (sandboxLanguage === 'python') {
+      return handleRunPython();
+    }
     setSandboxRunning(true);
+    setSandboxImages([]);
     setSandboxOutput(['[Compiling & Executing on Remote Server...]']);
+
+    // Wandbox always saves files as "prog.java", so Java's "public class X"
+    // fails because it must match the filename. Strip 'public' from top-level
+    // class declarations transparently — the code still runs identically.
+    const prepareCode = (code: string, lang: string): string => {
+      if (lang === 'java') {
+        return code.replace(/\bpublic\s+(class\s)/g, '$1');
+      }
+      return code;
+    };
+
     try {
-      const res = await fetch('https://wandbox.org/api/compile.json', {
+      const config = getCompilerConfig(sandboxLanguage);
+      const res = await fetch('/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          compiler: "gcc-head",
-          code: sandboxCode
+          ...config,
+          code: prepareCode(sandboxCode, sandboxLanguage),
         })
       });
       const data = await res.json();
@@ -141,22 +412,71 @@ export default function Labs() {
           {/* Interactive Code Editor Sandbox */}
           <div className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-gray-950 uppercase font-mono tracking-wider flex items-center gap-2">
-                <Code2 className="w-5 h-5 text-purple-600" /> C++ Compile Terminal
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-bold text-gray-950 uppercase font-mono tracking-wider flex items-center gap-2">
+                  <Code2 className="w-5 h-5 text-purple-600" /> Compile Terminal
+                </h2>
+                <select
+                  value={sandboxLanguage}
+                  onChange={(e) => {
+                    const lang = e.target.value as any;
+                    setSandboxLanguage(lang);
+                    setSandboxImages([]);
+                    if (lang === 'cpp') setSandboxCode('#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Welcome to StudentOS C++!\\n";\n    return 0;\n}');
+                    else if (lang === 'java') setSandboxCode('public class Main {\n    public static void main(String[] args) {\n        System.out.println("Welcome to StudentOS Java!");\n    }\n}');
+                    else if (lang === 'python') setSandboxCode('import numpy as np\nimport matplotlib.pyplot as plt\n\n# Sample plot — edit and click Run Python!\nx = np.linspace(0, 2 * np.pi, 200)\nplt.figure(figsize=(7, 4))\nplt.plot(x, np.sin(x), label="sin(x)", color="royalblue", linewidth=2)\nplt.plot(x, np.cos(x), label="cos(x)", color="tomato", linewidth=2)\nplt.title("Sine & Cosine")\nplt.xlabel("x")\nplt.ylabel("y")\nplt.legend()\nplt.grid(True, alpha=0.3)\nplt.tight_layout()\nplt.show()\nprint("Plot rendered!")\n');
+                  }}
+                  className="bg-white text-[10px] text-gray-700 border border-gray-300 rounded p-1 font-mono uppercase focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer"
+                >
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python 🐍</option>
+                </select>
+                {sandboxLanguage === 'python' && (
+                  <span className={`text-[9px] font-bold font-mono px-2 py-0.5 rounded-full border ${
+                    pyodideReady
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : pyodideLoading
+                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200 animate-pulse'
+                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    {pyodideReady ? '● ENV READY' : pyodideLoading ? '◌ LOADING...' : '○ INIT'}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSandboxCode(`#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    vector<int> arr = {1, 2, 3, 4, 5, 6, 7, 8};\n    cout << "Even Numbers: ";\n    for(int n : arr) {\n        if (n % 2 == 0) cout << n << " ";\n    }\n    return 0;\n}`)}
-                  className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
-                >
-                  Filter Even
-                </button>
-                <button
-                  onClick={() => setSandboxCode(`#include <iostream>\n#include <string>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    string str = "StudentOS Labs";\n    reverse(str.begin(), str.end());\n    cout << "Reversed: " << str << endl;\n    return 0;\n}`)}
-                  className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
-                >
-                  Reverse Str
-                </button>
+                {sandboxLanguage === 'cpp' && (
+                  <>
+                    <button
+                      onClick={() => setSandboxCode(`#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    vector<int> arr = {1, 2, 3, 4, 5, 6, 7, 8};\n    cout << "Even Numbers: ";\n    for(int n : arr) {\n        if (n % 2 == 0) cout << n << " ";\n    }\n    return 0;\n}`)}
+                      className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
+                    >
+                      Filter Even
+                    </button>
+                    <button
+                      onClick={() => setSandboxCode(`#include <iostream>\n#include <string>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    string str = "StudentOS Labs";\n    reverse(str.begin(), str.end());\n    cout << "Reversed: " << str << endl;\n    return 0;\n}`)}
+                      className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
+                    >
+                      Reverse Str
+                    </button>
+                  </>
+                )}
+                {sandboxLanguage === 'java' && (
+                  <button
+                    onClick={() => setSandboxCode(`public class Main {\n    public static void main(String[] args) {\n        String str = "StudentOS Labs";\n        String reversed = new StringBuilder(str).reverse().toString();\n        System.out.println("Reversed: " + reversed);\n    }\n}`)}
+                    className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
+                  >
+                    Reverse Str
+                  </button>
+                )}
+                {sandboxLanguage === 'python' && (
+                  <button
+                    onClick={() => setSandboxCode(`def main():\n    arr = [1, 2, 3, 4, 5, 6, 7, 8]\n    evens = [n for n in arr if n % 2 == 0]\n    print(f"Even Numbers: {evens}")\n\nif __name__ == "__main__":\n    main()`)}
+                    className="text-[10px] bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase transition-all"
+                  >
+                    Filter Even
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setAiActiveFeature('coach');
@@ -175,8 +495,11 @@ export default function Labs() {
                 <textarea
                   value={sandboxCode}
                   onChange={(e) => setSandboxCode(e.target.value)}
+                  onKeyDown={handleEditorKeyDown}
                   className="w-full h-72 bg-gray-900 text-gray-100 p-4 rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none shadow-inner leading-relaxed"
                   spellCheck="false"
+                  autoCorrect="off"
+                  autoCapitalize="off"
                 />
                 <div className="flex gap-2">
                   <button
@@ -184,7 +507,11 @@ export default function Labs() {
                     disabled={sandboxRunning}
                     className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold font-mono text-xs uppercase rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Compile & Run C++
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    {sandboxLanguage === 'python'
+                      ? pyodideLoading ? 'Loading Python...' : 'Run Python'
+                      : `Compile & Run ${sandboxLanguage.toUpperCase()}`
+                    }
                   </button>
                   <button
                     onClick={() => {
@@ -213,6 +540,40 @@ export default function Labs() {
                 </div>
               </div>
             </div>
+
+            {/* Python Visualization Output Gallery */}
+            {sandboxLanguage === 'python' && sandboxImages.length > 0 && (
+              <div className="flex flex-col gap-3 mt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📊</span>
+                  <h3 className="text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">Visualization Output</h3>
+                  <span className="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-mono">
+                    {sandboxImages.length} figure{sandboxImages.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {sandboxImages.map((img, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                      <div className="bg-gray-900 text-gray-400 text-[9px] font-mono px-3 py-1.5 flex items-center justify-between">
+                        <span>Figure {i + 1}</span>
+                        <a
+                          href={`data:image/png;base64,${img}`}
+                          download={`plot_figure_${i + 1}.png`}
+                          className="text-purple-400 hover:text-purple-300 font-bold uppercase transition-colors"
+                        >
+                          ⬇ Download PNG
+                        </a>
+                      </div>
+                      <img
+                        src={`data:image/png;base64,${img}`}
+                        alt={`Python Figure ${i + 1}`}
+                        className="w-full h-auto bg-white"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

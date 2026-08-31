@@ -6,20 +6,118 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* ============================
+   Theme CSS Custom Properties
+   ============================ */
+:root {
+  /* Backgrounds */
+  --bg-primary: #08090c;
+  --bg-secondary: #0F0F12;
+  --bg-card: #141417;
+  --bg-input: #1C1C1F;
+  --bg-hover: #1D1D21;
+  --bg-elevated: #101014;
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dimmed: #64748b;
+  --text-faint: #475569;
+
+  /* Borders */
+  --border-primary: #27272A;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Glass */
+  --glass-bg: rgba(13, 14, 18, 0.7);
+  --glass-bg-heavy: rgba(13, 14, 18, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.05);
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+
+  /* Overlays */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --overlay-bg-light: rgba(0, 0, 0, 0.5);
+
+  /* Markdown */
+  --md-heading: #ffffff;
+  --md-text: #cbd5e1;
+  --md-code-bg: rgba(255, 255, 255, 0.08);
+  --md-code-color: #f472b6;
+  --md-pre-bg: rgba(0, 0, 0, 0.3);
+  --md-pre-border: rgba(255, 255, 255, 0.05);
+  --md-pre-code: #cbd5e1;
+
+  /* Misc */
+  --grid-line: #80808005;
+  --shadow-glow: rgba(139, 92, 246, 0.3);
+}
+
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #f5f6fa;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #f0f1f5;
+  --bg-hover: #ebedf2;
+  --bg-elevated: #f8f9fc;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-dimmed: #9ca3af;
+  --text-faint: #b0b5bf;
+
+  /* Borders */
+  --border-primary: #e2e5eb;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.06);
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+
+  /* Overlays */
+  --overlay-bg: rgba(0, 0, 0, 0.3);
+  --overlay-bg-light: rgba(0, 0, 0, 0.2);
+
+  /* Markdown */
+  --md-heading: #111827;
+  --md-text: #374151;
+  --md-code-bg: rgba(0, 0, 0, 0.06);
+  --md-code-color: #db2777;
+  --md-pre-bg: #f3f4f6;
+  --md-pre-border: rgba(0, 0, 0, 0.08);
+  --md-pre-code: #374151;
+
+  /* Misc */
+  --grid-line: #00000008;
+  --shadow-glow: rgba(99, 102, 241, 0.15);
+}
+
 /* Base resets & typography */
 body {
   font-family: var(--font-sans);
-  background-color: #08090c;
-  color: #e2e8f0;
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Glassmorphism utility enhancements */
 .glass-panel {
-  background: rgba(13, 14, 18, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
 }
 
 /* Custom Scrollbar Styles for elegant aesthetic */
@@ -33,12 +131,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Animations declarations */
@@ -75,7 +173,7 @@ body {
 .markdown-body h2,
 .markdown-body h3 {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--md-heading);
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
 }
@@ -86,7 +184,7 @@ body {
 .markdown-body p {
   margin-bottom: 0.75rem;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: var(--md-text);
 }
 
 .markdown-body ul,
@@ -102,21 +200,21 @@ body {
 
 .markdown-body li {
   margin-bottom: 0.25rem;
-  color: #cbd5e1;
+  color: var(--md-text);
 }
 
 .markdown-body code {
   font-family: var(--font-mono);
   font-size: 0.85em;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--md-code-bg);
   padding: 0.15rem 0.35rem;
   border-radius: 4px;
-  color: #f472b6;
+  color: var(--md-code-color);
 }
 
 .markdown-body pre {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--md-pre-bg);
+  border: 1px solid var(--md-pre-border);
   padding: 1rem;
   border-radius: 8px;
   overflow-x: auto;
@@ -126,6 +224,15 @@ body {
 .markdown-body pre code {
   background: transparent;
   padding: 0;
-  color: #cbd5e1;
+  color: var(--md-pre-code);
   font-size: 0.8em;
+}
+
+/* ============================
+   Theme-aware utility helpers
+   ============================ */
+
+/* Smooth transition for theme-responsive elements */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }

@@ -162,9 +162,9 @@ export default function AuthScreen() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#09090B] flex items-center justify-center p-4 relative overflow-hidden font-sans text-gray-200">
+    <div className="min-h-screen w-full bg-[var(--bg-primary)] flex items-center justify-center p-4 relative overflow-hidden font-sans text-[var(--text-secondary)] theme-transition">
       {/* Dynamic ambient grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--grid-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-line)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
       
       {/* Gradient glow orbs */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none"></div>
@@ -182,29 +182,29 @@ export default function AuthScreen() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-mono mb-4">
             <LockKeyhole className="w-3.5 h-3.5 text-purple-400" /> Firebase Security Shield Active
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white font-sans flex items-center justify-center gap-2">
+          <h1 className="text-4xl font-extrabold tracking-tight text-[var(--text-primary)] font-sans flex items-center justify-center gap-2">
             <span className="bg-gradient-to-r from-purple-400 via-indigo-400 to-blue-400 text-transparent bg-clip-text font-display font-bold">
               StudentOS
             </span>
-            <span className="text-white text-35xl font-light font-display">AI</span>
+            <span className="text-[var(--text-primary)] text-35xl font-light font-display">AI</span>
           </h1>
-          <p className="text-xs text-gray-400 mt-1 font-sans">
+          <p className="text-xs text-[var(--text-muted)] mt-1 font-sans">
             Customize your academic credentials, university background, and generate professional career bios.
           </p>
           {/* Hide email from other users */}
-          <div className="mt-2 text-xs text-gray-500 font-mono">
+          <div className="mt-2 text-xs text-[var(--text-dimmed)] font-mono">
             Email visibility: <span className="font-bold text-indigo-500">Hidden from other users</span>
           </div>
         </div>
 
         {/* Form Container */}
-        <div className="bg-[#161B22]/80 border border-white/5 backdrop-blur-xl p-8 rounded-2xl shadow-2xl relative">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] backdrop-blur-xl p-8 rounded-2xl shadow-2xl relative theme-transition">
           
           {/* Section title */}
-          <h2 className="text-xl font-bold text-white tracking-tight font-sans mb-1 text-left">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight font-sans mb-1 text-left">
             {isSignUp ? 'Create secure account' : 'Welcome back, Scholar'}
           </h2>
-          <p className="text-xs text-gray-400 mb-6 text-left">
+          <p className="text-xs text-[var(--text-muted)] mb-6 text-left">
             {isSignUp 
               ? 'Join the high-fidelity academic tracking ecosystem powered by Gemini AI' 
               : 'Enter your credentials to restore your high-fidelity workspace session'
@@ -239,7 +239,7 @@ export default function AuthScreen() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[#111827] border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--bg-input)] border border-[var(--border-primary)] rounded-xl text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all cursor-pointer disabled:opacity-50"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -252,18 +252,18 @@ export default function AuthScreen() {
             <button
               onClick={handleGitHubLogin}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-[#111827] border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--bg-input)] border border-[var(--border-primary)] rounded-xl text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all cursor-pointer disabled:opacity-50"
             >
-              <Github className="w-4 h-4 text-white" />
+              <Github className="w-4 h-4 text-[var(--text-primary)]" />
               GitHub Auth
             </button>
           </div>
 
           {/* Divider line */}
           <div className="flex items-center gap-3.5 mb-6">
-            <div className="flex-1 h-[1px] bg-white/5"></div>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Or credential channel</span>
-            <div className="flex-1 h-[1px] bg-white/5"></div>
+            <div className="flex-1 h-[1px] bg-[var(--border-subtle)]"></div>
+            <span className="text-[10px] font-mono text-[var(--text-dimmed)] uppercase tracking-widest">Or credential channel</span>
+            <div className="flex-1 h-[1px] bg-[var(--border-subtle)]"></div>
           </div>
 
           {/* Core credential Form */}
@@ -275,18 +275,18 @@ export default function AuthScreen() {
                 className="flex flex-col gap-4"
               >
                 <div>
-                  <label className="block text-[10px] font-bold uppercase font-mono tracking-wider text-gray-400 mb-1.5">
+                  <label className="block text-[10px] font-bold uppercase font-mono tracking-wider text-[var(--text-muted)] mb-1.5">
                     Full Legal Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                    <User className="absolute left-3 top-3.5 w-4 h-4 text-[var(--text-dimmed)]" />
                     <input
                       type="text"
                       placeholder="e.g. Jane Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required={isSignUp}
-                      className="w-full bg-[#111827]/80 text-xs rounded-xl border border-white/10 p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-white font-sans"
+                      className="w-full bg-[var(--bg-input)] text-xs rounded-xl border border-[var(--border-primary)] p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-[var(--text-primary)] font-sans"
                     />
                   </div>
                 </div>
@@ -297,12 +297,12 @@ export default function AuthScreen() {
                       University
                     </label>
                     <div className="relative">
-                      <School className="absolute left-3 top-3 w-3.5 h-3.5 text-gray-500" />
+                      <School className="absolute left-3 top-3 w-3.5 h-3.5 text-[var(--text-dimmed)]" />
                       <input
                         type="text"
                         value={university}
                         onChange={(e) => setUniversity(e.target.value)}
-                        className="w-full bg-[#111827]/80 text-[11px] rounded-xl border border-white/10 p-2.5 pl-9 focus:outline-none focus:border-purple-500 text-white"
+                        className="w-full bg-[var(--bg-input)] text-[11px] rounded-xl border border-[var(--border-primary)] p-2.5 pl-9 focus:outline-none focus:border-purple-500 text-[var(--text-primary)]"
                       />
                     </div>
                   </div>
@@ -312,12 +312,12 @@ export default function AuthScreen() {
                       Major Field
                     </label>
                     <div className="relative">
-                      <GraduationCap className="absolute left-3 top-3 w-3.5 h-3.5 text-gray-500" />
+                      <GraduationCap className="absolute left-3 top-3 w-3.5 h-3.5 text-[var(--text-dimmed)]" />
                       <input
                         type="text"
                         value={major}
                         onChange={(e) => setMajor(e.target.value)}
-                        className="w-full bg-[#111827]/80 text-[11px] rounded-xl border border-white/10 p-2.5 pl-9 focus:outline-none focus:border-purple-500 text-white"
+                        className="w-full bg-[var(--bg-input)] text-[11px] rounded-xl border border-[var(--border-primary)] p-2.5 pl-9 focus:outline-none focus:border-purple-500 text-[var(--text-primary)]"
                       />
                     </div>
                   </div>
@@ -331,7 +331,7 @@ export default function AuthScreen() {
                     type="number"
                     value={graduationYear}
                     onChange={(e) => setGraduationYear(e.target.value)}
-                    className="w-full bg-[#111827]/80 text-xs rounded-xl border border-white/10 p-3 focus:outline-none focus:border-purple-500 text-white font-mono"
+                    className="w-full bg-[var(--bg-input)] text-xs rounded-xl border border-[var(--border-primary)] p-3 focus:outline-none focus:border-purple-500 text-[var(--text-primary)] font-mono"
                   />
                 </div>
               </motion.div>
@@ -342,14 +342,14 @@ export default function AuthScreen() {
                 School Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                <Mail className="absolute left-3 top-3.5 w-4 h-4 text-[var(--text-dimmed)]" />
                 <input
                   type="email"
                   placeholder="name@university.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-[#111827]/80 text-xs rounded-xl border border-white/10 p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-white font-sans"
+                  className="w-full bg-[var(--bg-input)] text-xs rounded-xl border border-[var(--border-primary)] p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-[var(--text-primary)] font-sans"
                 />
               </div>
             </div>
@@ -362,14 +362,14 @@ export default function AuthScreen() {
                 )}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                <Lock className="absolute left-3 top-3.5 w-4 h-4 text-[var(--text-dimmed)]" />
                 <input
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-[#111827]/80 text-xs rounded-xl border border-white/10 p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-white font-sans"
+                  className="w-full bg-[var(--bg-input)] text-xs rounded-xl border border-[var(--border-primary)] p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-[var(--text-primary)] font-sans"
                 />
               </div>
             </div>
@@ -387,7 +387,7 @@ export default function AuthScreen() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="w-full bg-[#111827]/80 text-xs rounded-xl border border-white/10 p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-white font-sans"
+                    className="w-full bg-[var(--bg-input)] text-xs rounded-xl border border-[var(--border-primary)] p-3.5 pl-10 focus:outline-none focus:border-purple-500 text-[var(--text-primary)] font-sans"
                   />
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default function AuthScreen() {
 
           {/* Form switcher */}
           <div className="mt-6 text-center">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-[var(--text-muted)]">
               {isSignUp ? 'Already registered on Firebase?' : 'New scholar at StudentOS?'}
             </span>{' '}
             <button
@@ -429,7 +429,7 @@ export default function AuthScreen() {
         </div>
 
         {/* Security pledge footer */}
-        <p className="text-[10px] text-center text-gray-500 font-mono uppercase tracking-wider mt-6">
+        <p className="text-[10px] text-center text-[var(--text-dimmed)] font-mono uppercase tracking-wider mt-6">
           🔐 Secure end-to-end sessions managed via firestore.rules rulesets
         </p>
       </motion.div>

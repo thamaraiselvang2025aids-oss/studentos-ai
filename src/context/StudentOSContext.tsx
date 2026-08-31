@@ -92,6 +92,8 @@ interface StudentOSContextType {
   setGlobalSearchQuery: (query: string) => void;
   sidebarTheme: string;
   setSidebarTheme: (theme: string) => void;
+  appTheme: string;
+  setAppTheme: (theme: string) => void;
   customCategories: { academic: string; professional: string; general: string; };
   updateCategoryLabel: (key: 'academic' | 'professional' | 'general', label: string) => void;
 
@@ -201,7 +203,17 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useUserScopedState<NotificationItem[]>('notifications', [], authUser);
 
   const [sidebarTheme, setSidebarTheme] = useUserScopedState<string>('sidebarTheme', 'violet', authUser);
+  const [appTheme, setAppTheme] = useUserScopedState<string>('appTheme', 'dark', authUser);
   const [customCategories, setCustomCategories] = useUserScopedState<{ academic: string; professional: string; general: string; }>('customCategories', { academic: 'Academic', professional: 'Professional', general: 'General' }, authUser);
+
+  // Sync appTheme to document root for CSS variable switching
+  useEffect(() => {
+    if (appTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }, [appTheme]);
 
   const updateCategoryLabel = (key: 'academic' | 'professional' | 'general', label: string) => {
     setCustomCategories(prev => ({ ...prev, [key]: label }));
@@ -576,6 +588,8 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
         setGlobalSearchQuery,
         sidebarTheme,
         setSidebarTheme,
+        appTheme,
+        setAppTheme,
         customCategories,
         updateCategoryLabel,
 

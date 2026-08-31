@@ -136,15 +136,8 @@ class FirebaseAuthService {
             }
           }
         } else {
-          // Prevent real Firebase from logging out sandbox/fallback users on reload
-          const isFallback = this.currentUser &&
-            (this.currentUser.uid.startsWith('uid_') ||
-              this.currentUser.uid.startsWith('soc_'));
-
-          if (!isFallback) {
-            this.currentUser = null;
-            localStorage.removeItem('student_os_auth_session');
-          }
+          // Prevent Firebase from logging out users on reload if persistence fails.
+          // StudentOS is local-first, so we trust the cached localStorage session.
         }
         this.initialized = true;
         this.notify();
