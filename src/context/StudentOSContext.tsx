@@ -521,14 +521,12 @@ export function StudentOSProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Notifications
-  const addNotification = (notif: Omit<NotificationItem, 'id'>) => {
-    const newNotif: NotificationItem = { ...notif, id: `nt_${Date.now()}` };
+  const addNotification = (notif: Omit<NotificationItem, 'id' | 'read'>) => {
+    const newNotif = { ...notif, id: crypto.randomUUID(), read: false };
     setNotifications((prev) => [newNotif, ...prev]);
   };
-  const markNotificationRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, read: true } : item))
-    );
+  const removeNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
   const clearAllNotifications = () => {
     setNotifications([]);
